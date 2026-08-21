@@ -1,0 +1,16 @@
+services:
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    # We mount the .env file explicitly so the container can access the database/R2 secrets
+    env_file: ./backend/.env
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    # Healthchecks ensure Docker knows if the API actually started successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/public/site-settings"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
