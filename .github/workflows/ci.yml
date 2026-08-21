@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  frontend-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: portfolio/package-lock.json
+          
+      - name: Install dependencies
+        run: cd portfolio && npm ci
+        
+      - name: Build Next.js
+        run: cd portfolio && npm run build
+        env:
+          # We provide a dummy URL just so Next.js can build successfully
+          NEXT_PUBLIC_API_BASE_URL: "http://placeholder:8000/api"
+
+  backend-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+          
+      - name: Install dependencies
+        run: cd backend && pip install -r requirements.txt
+        
+      - name: Check syntax
+        run: cd backend && python -m py_compile app/main.py
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Test Docker Build
+        run: cd backend && docker build -t portfolio-api-test .
