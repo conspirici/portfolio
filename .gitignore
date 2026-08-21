@@ -1,0 +1,15 @@
+# Private working documents (never commit)
+GAMEPLAN.md
+changed.md
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

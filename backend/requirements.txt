@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+sqlalchemy[asyncio]
+asyncpg
+alembic
+pydantic
+pydantic-settings
+structlog
+sentry-sdk[fastapi]
+firebase-admin
+groq
+aioboto3
+python-multipart

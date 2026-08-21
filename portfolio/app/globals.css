@@ -1,0 +1,95 @@
+@import "tailwindcss";
+@plugin "../node_modules/@tailwindcss/typography";
+
+@theme {
+  /* ── Forest palette ── */
+  --color-forest-900: #123024;
+  --color-forest-700: #1A5140;
+  --color-forest-500: #288760;
+  --color-forest-200: #B7E5BA;
+
+  /* ── Teal palette ── */
+  --color-teal-900: #0D2B33;
+  --color-teal-700: #09606D;
+  --color-teal-500: #075057;
+
+  /* ── Neutrals ── */
+  --color-mist-100: #D8ECEC;
+  --color-sage-white: #F5F7F4;
+  --color-charcoal-green: #1B231F;
+  --color-warm-gray-200: #E4E7E2;
+
+  /* ── Typography ── */
+  --font-display: var(--font-fraunces), "Georgia", serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SF Mono", monospace;
+}
+
+/* ── Base ── */
+body {
+  background: var(--color-sage-white);
+  color: var(--color-charcoal-green);
+}
+
+::selection {
+  background: var(--color-forest-700);
+  color: var(--color-sage-white);
+}
+
+/* ── Grain overlay utility ── */
+.grain-overlay {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  mix-blend-mode: overlay;
+  opacity: 0.05; /* drastically reduced from 0.45 */
+  pointer-events: none;
+}
+
+/* ── Skeleton shimmer ── */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-warm-gray-200);
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Image Protection ── */
+img {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  pointer-events: none;
+}
