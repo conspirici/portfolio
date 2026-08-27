@@ -6,7 +6,9 @@ services:
     # We mount the .env file explicitly so the container can access the database/R2 secrets
     env_file: ./backend/.env
     ports:
-      - "8000:8000"
+      # Bind to localhost only so it's not exposed to the public internet.
+      # Caddy on the host will use `reverse_proxy 127.0.0.1:8000`
+      - "127.0.0.1:8000:8000"
     restart: unless-stopped
     # Healthchecks ensure Docker knows if the API actually started successfully
     healthcheck:
