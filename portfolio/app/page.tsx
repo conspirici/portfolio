@@ -122,37 +122,31 @@ export default async function Home() {
       </section>
 
       {/* ─── 3. Work Preview ─── */}
-      <section 
-        className="relative overflow-hidden py-20 sm:py-28"
-        style={{ background: 'linear-gradient(135deg, #123024 0%, #0D2B33 50%, #075057 100%)' }}
-      >
-        <div className="grain-overlay" />
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 relative z-10">
-          <div className="flex items-baseline justify-between mb-10">
-            <div>
-              <p className="font-mono text-[12px] tracking-[0.08em] uppercase text-sage-white/70 mb-2.5">
-                Selected Work
-              </p>
-              <p className="font-sans text-sage-white/90 text-sm">
-                A few systems I have designed, built, and shipped.
-              </p>
+      {featuredProjects.length > 0 && (
+        <section 
+          className="relative overflow-hidden py-20 sm:py-28"
+          style={{ background: 'linear-gradient(135deg, #123024 0%, #0D2B33 50%, #075057 100%)' }}
+        >
+          <div className="grain-overlay" />
+          <div className="max-w-7xl mx-auto px-6 sm:px-10 relative z-10">
+            <div className="flex items-baseline justify-between mb-10">
+              <div>
+                <p className="font-mono text-[12px] tracking-[0.08em] uppercase text-sage-white/70 mb-2.5">
+                  Selected Work
+                </p>
+                <p className="font-sans text-sage-white/90 text-sm">
+                  A few systems I have designed, built, and shipped.
+                </p>
+              </div>
+              <Link
+                href="/work"
+                className="hidden sm:inline-flex items-center gap-1.5 font-mono text-[12px] tracking-[0.04em] uppercase text-sage-white/70 border-b border-sage-white/70 pb-0.5 hover:opacity-70 transition-opacity"
+              >
+                See all work
+                <ArrowRight className="w-3 h-3" />
+              </Link>
             </div>
-            <Link
-              href="/work"
-              className="hidden sm:inline-flex items-center gap-1.5 font-mono text-[12px] tracking-[0.04em] uppercase text-sage-white/70 border-b border-sage-white/70 pb-0.5 hover:opacity-70 transition-opacity"
-            >
-              See all work
-              <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
 
-          {featuredProjects.length === 0 ? (
-            <div className="w-full py-16 flex items-center justify-center">
-              <p className="font-mono text-sm text-sage-white/40 tracking-wider uppercase">
-                No projects yet
-              </p>
-            </div>
-          ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
               {featuredProjects.map((project) => (
                 <Link href={`/work/${project.slug}`} key={project.slug} className="group flex flex-col bg-white/5 backdrop-blur-sm p-4 border border-sage-white/10 hover:bg-white/10 transition-colors">
@@ -174,49 +168,43 @@ export default async function Home() {
                 </Link>
               ))}
             </div>
-          )}
 
-          {/* Mobile "See all work" link */}
-          <Link
-            href="/work"
-            className="sm:hidden mt-6 inline-flex items-center gap-1.5 font-mono text-[12px] tracking-[0.04em] uppercase text-sage-white/70 border-b border-sage-white/70 pb-0.5"
-          >
-            See all work
-            <ArrowRight className="w-3 h-3" />
-          </Link>
-        </div>
-      </section>
-
-      {/* ─── 4. Writing Preview ─── */}
-      <section 
-        className="relative overflow-hidden py-16 sm:py-20"
-        style={{ background: 'linear-gradient(180deg, #288760 0%, #075057 100%)' }}
-      >
-        <div className="grain-overlay" />
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 relative z-10">
-          <div className="flex items-baseline justify-between mb-8">
-            <p className="font-mono text-[12px] tracking-[0.08em] uppercase text-sage-white/80 mb-2.5">
-              Writing
-            </p>
+            {/* Mobile "See all work" link */}
             <Link
-              href="/writing"
-              className="hidden sm:inline-flex items-center gap-1.5 font-mono text-[12px] tracking-[0.04em] uppercase text-sage-white/80 border-b border-sage-white/80 pb-0.5 hover:opacity-70 transition-opacity"
+              href="/work"
+              className="sm:hidden mt-6 inline-flex items-center gap-1.5 font-mono text-[12px] tracking-[0.04em] uppercase text-sage-white/70 border-b border-sage-white/70 pb-0.5"
             >
-              Read all writing
+              See all work
               <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
-          <p className="font-sans text-sage-white text-base max-w-lg mb-10">
-            Technical breakdowns and the occasional philosophical detour.
-          </p>
+        </section>
+      )}
 
-          {featuredPosts.length === 0 ? (
-            <div className="w-full py-16 flex items-center justify-center">
-              <p className="font-mono text-sm text-sage-white/40 tracking-wider uppercase">
-                No posts yet
+      {/* ─── 4. Writing Preview ─── */}
+      {featuredPosts.length > 0 && (
+        <section 
+          className="relative overflow-hidden py-16 sm:py-20"
+          style={{ background: 'linear-gradient(180deg, #288760 0%, #075057 100%)' }}
+        >
+          <div className="grain-overlay" />
+          <div className="max-w-7xl mx-auto px-6 sm:px-10 relative z-10">
+            <div className="flex items-baseline justify-between mb-8">
+              <p className="font-mono text-[12px] tracking-[0.08em] uppercase text-sage-white/80 mb-2.5">
+                Writing
               </p>
+              <Link
+                href="/writing"
+                className="hidden sm:inline-flex items-center gap-1.5 font-mono text-[12px] tracking-[0.04em] uppercase text-sage-white/80 border-b border-sage-white/80 pb-0.5 hover:opacity-70 transition-opacity"
+              >
+                Read all writing
+                <ArrowRight className="w-3 h-3" />
+              </Link>
             </div>
-          ) : (
+            <p className="font-sans text-sage-white text-base max-w-lg mb-10">
+              Technical breakdowns and the occasional philosophical detour.
+            </p>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {featuredPosts.map((post) => (
                 <Link href={`/writing/${post.slug}`} key={post.slug} className="group flex flex-col p-5 bg-white/5 hover:bg-white/10 border border-sage-white/10 transition-colors">
@@ -239,17 +227,17 @@ export default async function Home() {
                 </Link>
               ))}
             </div>
-          )}
 
-          <Link
-            href="/writing"
-            className="sm:hidden mt-8 inline-flex items-center gap-1.5 font-mono text-[12px] tracking-[0.04em] uppercase text-sage-white/80 border-b border-sage-white/80 pb-0.5"
-          >
-            Read all writing
-            <ArrowRight className="w-3 h-3" />
-          </Link>
-        </div>
-      </section>
+            <Link
+              href="/writing"
+              className="sm:hidden mt-8 inline-flex items-center gap-1.5 font-mono text-[12px] tracking-[0.04em] uppercase text-sage-white/80 border-b border-sage-white/80 pb-0.5"
+            >
+              Read all writing
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

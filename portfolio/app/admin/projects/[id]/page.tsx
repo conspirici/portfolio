@@ -149,6 +149,21 @@ export default function EditProject() {
     }
   };
 
+  const handleDelete = async () => {
+    if (isNew) return;
+    if (!confirm("Are you sure you want to delete this project? This cannot be undone.")) return;
+    
+    try {
+      await fetchApi(`/admin/projects/${id}`, {
+        method: "DELETE",
+      });
+      router.push("/admin/projects");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete project");
+    }
+  };
+
   if (loading) {
     return <AdminPageLoader />;
   }
@@ -161,6 +176,14 @@ export default function EditProject() {
           <Link href="/admin/projects" className="text-sage-white/70 hover:text-white transition-colors">
             Cancel
           </Link>
+          {!isNew && (
+            <button 
+              onClick={handleDelete}
+              className="text-red-400 hover:text-red-300 transition-colors"
+            >
+              Delete
+            </button>
+          )}
           <button 
             onClick={handleSave}
             disabled={saving}
