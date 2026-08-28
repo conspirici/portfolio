@@ -70,8 +70,8 @@ export default async function Home() {
     } catch { /* no posts yet */ }
   }
 
-  const headline = homeData?.hero_headline || "Meet Brainka,";
-  const subheadline = homeData?.hero_subheadline || "and discover connections you didn't know existed.";
+  const headline = homeData?.hero_headline || "Mansoor Syed";
+  const subheadline = homeData?.hero_subheadline || "Software Engineer & Designer";
   const heroImage = homeData?.hero_image_url || "";
   const logos = homeData?.hero_logo_urls || [];
 
