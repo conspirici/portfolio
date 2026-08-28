@@ -1,0 +1,67 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Oracle Server
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo "${{ secrets.SERVER_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy and Verify
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o PasswordAuthentication=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+            set -e
+            cd /srv/portfolio
+            
+            echo "Fetching latest changes..."
+            git fetch origin main
+            git reset --hard origin/main
+            
+            echo "Rebuilding API Docker image..."
+            docker compose build api
+            
+            echo "Restarting API container (zero-downtime recreation)..."
+            # Recreates only the API service without taking down other potential services
+            docker compose up -d --no-deps api
+            
+            echo "Waiting for container to report healthy..."
+            # Wait up to 60 seconds for the healthcheck to pass
+            for i in {1..12}; do
+              STATUS=$(docker inspect --format='{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}' $(docker compose ps -q api))
+              if [ "$STATUS" == "healthy" ]; then
+                echo "Container is healthy!"
+                break
+              fi
+              if [ "$i" -eq 12 ]; then
+                echo "Error: Container failed to become healthy. Final Status: $STATUS"
+                docker compose logs --tail=50 api
+                exit 1
+              fi
+              echo "Status: $STATUS. Waiting 5 seconds..."
+              sleep 5
+            done
+            
+            echo "Verifying local API endpoint..."
+            if ! curl -f -s -o /dev/null http://127.0.0.1:8000/api/public/site-settings; then
+              echo "Error: Internal API health check failed."
+              exit 1
+            fi
+            
+            echo "Backend successfully deployed and verified!"
+          EOF
