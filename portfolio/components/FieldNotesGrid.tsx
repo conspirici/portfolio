@@ -68,7 +68,7 @@ export function FieldNotesGrid({ notes }: { notes: FieldNoteResponse[] }) {
           onClick={() => setSelectedPhoto(null)}
         >
           <div 
-            className="w-full max-w-[600px] relative shadow-2xl mx-auto cursor-default"
+            className="w-full max-w-[600px] max-h-[85vh] relative shadow-2xl mx-auto cursor-default flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             <PrintedPhotoFrame 
@@ -76,6 +76,8 @@ export function FieldNotesGrid({ notes }: { notes: FieldNoteResponse[] }) {
               alt={selectedPhoto.caption || "Field Note"}
               width={1200}
               height={1200}
+              className="max-h-[85vh] flex flex-col justify-center"
+              imageClassName="object-contain max-h-[80vh]"
             >
               <div className="absolute bottom-6 left-6 right-6 z-10 text-white pointer-events-none">
                 {selectedPhoto.caption && <p className="font-sans text-2xl mb-2 drop-shadow-lg shadow-black">{selectedPhoto.caption}</p>}

@@ -94,6 +94,21 @@ export default function EditFieldNote() {
     }
   };
 
+  const handleDelete = async () => {
+    if (isNew) return;
+    if (!confirm("Are you sure you want to delete this field note? This cannot be undone.")) return;
+    
+    try {
+      await fetchApi(`/admin/field-notes/${id}`, {
+        method: "DELETE",
+      });
+      router.push("/admin/field-notes");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete field note");
+    }
+  };
+
   if (loading) {
     return <AdminPageLoader />;
   }
@@ -106,6 +121,14 @@ export default function EditFieldNote() {
           <Link href="/admin/field-notes" className="text-sage-white/70 hover:text-white transition-colors">
             Cancel
           </Link>
+          {!isNew && (
+            <button 
+              onClick={handleDelete}
+              className="text-red-400 hover:text-red-300 transition-colors"
+            >
+              Delete
+            </button>
+          )}
           <button 
             onClick={handleSave}
             disabled={saving}

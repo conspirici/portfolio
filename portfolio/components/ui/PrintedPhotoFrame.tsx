@@ -14,6 +14,7 @@ interface PrintedPhotoFrameProps {
   size?: 'small' | 'medium' | 'full';
   priority?: boolean;
   className?: string;
+  imageClassName?: string;
 }
 
 export function PrintedPhotoFrame({
@@ -24,6 +25,7 @@ export function PrintedPhotoFrame({
   size = 'full',
   priority = false,
   className,
+  imageClassName,
   children,
 }: PrintedPhotoFrameProps & { children?: React.ReactNode }) {
   const sizeClasses = {
@@ -52,7 +54,7 @@ export function PrintedPhotoFrame({
               width={width}
               height={height}
               priority={priority}
-              className="w-full h-auto object-cover"
+              className={cn("w-full h-auto object-cover", imageClassName)}
             />
           ) : (
             <Image
@@ -60,7 +62,7 @@ export function PrintedPhotoFrame({
               alt={alt}
               fill
               priority={priority}
-              className="object-cover"
+              className={cn("object-cover", imageClassName)}
             />
           )
         ) : (

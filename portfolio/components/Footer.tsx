@@ -69,7 +69,7 @@ export default function Footer() {
         {/* Bottom */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-sage-white/10">
           <p className="font-mono text-xs text-sage-white/60">
-            Built and engineered by {site.name}.
+            Built and engineered by <a href="https://www.linkedin.com/in/mansoor-syed-8373b3247/" target="_blank" rel="noopener noreferrer" className="hover:text-sage-white transition-colors">{site.name}</a>.
           </p>
           <p className="font-mono text-xs text-sage-white/60">
             &copy; {new Date().getFullYear()} {site.name}. All rights reserved.
