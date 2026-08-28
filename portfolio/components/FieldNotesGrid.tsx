@@ -68,22 +68,24 @@ export function FieldNotesGrid({ notes }: { notes: FieldNoteResponse[] }) {
           onClick={() => setSelectedPhoto(null)}
         >
           <div 
-            className="w-full max-w-[600px] max-h-[85vh] relative shadow-2xl mx-auto cursor-default flex flex-col"
+            className="relative shadow-2xl mx-auto cursor-default bg-sage-white p-2 w-fit h-fit max-w-[95vw] max-h-[95vh]"
             onClick={(e) => e.stopPropagation()}
           >
-            <PrintedPhotoFrame 
-              src={selectedPhoto.photo_url}
-              alt={selectedPhoto.caption || "Field Note"}
-              width={1200}
-              height={1200}
-              className="max-h-[85vh] flex flex-col justify-center"
-              imageClassName="object-contain max-h-[80vh]"
-            >
+            <div className="relative overflow-hidden bg-warm-gray-200 flex items-center justify-center">
+              <img 
+                src={selectedPhoto.photo_url} 
+                alt={selectedPhoto.caption || "Field Note"}
+                className="w-auto h-auto max-w-[90vw] max-h-[85vh]"
+              />
+              <div 
+                className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-[0.08]"
+                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}
+              />
               <div className="absolute bottom-6 left-6 right-6 z-10 text-white pointer-events-none">
                 {selectedPhoto.caption && <p className="font-sans text-2xl mb-2 drop-shadow-lg shadow-black">{selectedPhoto.caption}</p>}
                 {selectedPhoto.location && <p className="font-mono text-sm text-white/90 uppercase tracking-wider drop-shadow-lg shadow-black">{selectedPhoto.location}</p>}
               </div>
-            </PrintedPhotoFrame>
+            </div>
           </div>
         </div>
       )}
