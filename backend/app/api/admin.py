@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.core.security import get_current_admin
 from app.db.database import get_db
-from app.models import Project, BlogPost, FieldNote, Tag, SiteSettings, HomeContent, AboutContent, ActivityLog
+from app.models import Project, ProjectVideo, BlogPost, FieldNote, Tag, SiteSettings, HomeContent, AboutContent, ActivityLog
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from fastapi import UploadFile, File
@@ -88,6 +88,37 @@ async def delete_project(id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     if not db_project:
         raise HTTPException(status_code=404, detail="Project not found")
     await db.delete(db_project)
+    await db.commit()
+
+@router.post("/projects/{id}/videos", response_model=schemas.ProjectVideoResponse, status_code=status.HTTP_201_CREATED)
+async def add_project_video(id: uuid.UUID, video: schemas.ProjectVideoCreate, db: AsyncSession = Depends(get_db)):
+    db_project = await db.get(Project, id)
+    if not db_project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    db_video = ProjectVideo(**video.model_dump(), project_id=id)
+    db.add(db_video)
+    await db.commit()
+    await db.refresh(db_video)
+    return db_video
+
+@router.put("/projects/{id}/videos/{video_id}", response_model=schemas.ProjectVideoResponse)
+async def update_project_video(id: uuid.UUID, video_id: uuid.UUID, video: schemas.ProjectVideoUpdate, db: AsyncSession = Depends(get_db)):
+    db_video = await db.get(ProjectVideo, video_id)
+    if not db_video or db_video.project_id != id:
+        raise HTTPException(status_code=404, detail="Video not found")
+    update_data = video.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_video, key, value)
+    await db.commit()
+    await db.refresh(db_video)
+    return db_video
+
+@router.delete("/projects/{id}/videos/{video_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_project_video(id: uuid.UUID, video_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    db_video = await db.get(ProjectVideo, video_id)
+    if not db_video or db_video.project_id != id:
+        raise HTTPException(status_code=404, detail="Video not found")
+    await db.delete(db_video)
     await db.commit()
 
 # --- Posts ---

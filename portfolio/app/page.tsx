@@ -19,7 +19,8 @@ interface ProjectResponse {
   slug: string;
   title: string;
   summary: string;
-  thumbnail_url: string;
+  gradient_from?: string;
+  gradient_to?: string;
   tags: TagResponse[];
 }
 
@@ -148,25 +149,34 @@ export default async function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
-              {featuredProjects.map((project) => (
-                <Link href={`/work/${project.slug}`} key={project.slug} className="group flex flex-col bg-white/5 backdrop-blur-sm p-4 border border-sage-white/10 hover:bg-white/10 transition-colors">
-                  <div className="mb-6 transition-transform group-hover:-translate-y-1 overflow-hidden">
-                    <PrintedPhotoFrame
-                      src={project.thumbnail_url}
-                      alt={project.title}
-                      width={800}
-                      height={600}
-                    />
-                  </div>
-                  <h2 className="font-display text-2xl text-sage-white mb-3 group-hover:text-white transition-colors">{project.title}</h2>
-                  <p className="font-sans text-sage-white/70 mb-5 flex-grow">{project.summary}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {project.tags.map((tag) => (
-                      <TagPill key={tag.id} label={tag.name} type="tech" className="bg-transparent border-sage-white/30 text-sage-white/80" />
-                    ))}
-                  </div>
-                </Link>
-              ))}
+              {featuredProjects.map((project) => {
+                const gradientFrom = project.gradient_from || "#288760";
+                const gradientTo = project.gradient_to || "#075057";
+                
+                return (
+                  <Link 
+                    href={`/work/${project.slug}`} 
+                    key={project.slug} 
+                    className="group flex flex-col transition-transform hover:-translate-y-1"
+                  >
+                    <div 
+                      className="relative w-full aspect-[4/3] p-8 flex flex-col border border-white/10 overflow-hidden shadow-lg"
+                      style={{ background: `linear-gradient(135deg, ${gradientFrom} 0%, ${gradientTo} 100%)` }}
+                    >
+                      <div className="grain-overlay opacity-20" />
+                      <div className="relative z-10 flex flex-col h-full">
+                        <h2 className="font-display text-3xl text-white mb-3 drop-shadow-sm">{project.title}</h2>
+                        <p className="font-sans text-sage-white/90 text-lg leading-relaxed flex-grow drop-shadow-sm">{project.summary}</p>
+                        
+                        <div className="mt-auto pt-6 flex items-center gap-2 text-white font-mono text-sm uppercase tracking-wider">
+                          <span className="underline decoration-white/30 underline-offset-4 group-hover:decoration-white transition-colors">View Project</span>
+                          <svg className="transform group-hover:translate-x-1 transition-transform" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
 
             {/* Mobile "See all work" link */}
