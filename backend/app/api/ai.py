@@ -45,7 +45,15 @@ async def draft_assist(req: DraftAssistRequest):
             {"role": "system", "content": f"You are an expert technical writer. Convert the user's bullet notes into a cohesive MDX body. Follow these voice rules strictly: {req.voice_rules}"},
             {"role": "user", "content": req.notes}
         ]
-        chat = client.chat.completions.create(messages=messages, model="llama-3.1-70b-versatile")
+        chat = client.chat.completions.create(
+            model="openai/gpt-oss-120b",
+            messages=messages,
+            temperature=1,
+            max_completion_tokens=2048,
+            top_p=1,
+            reasoning_effort="medium",
+            stop=None
+        )
         return {"response": chat.choices[0].message.content}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -57,7 +65,15 @@ async def tone_check(req: ToneCheckRequest):
             {"role": "system", "content": f"You are a tone-checker. Evaluate the content against these voice rules: {req.voice_rules}. Identify any drift, generic buzzwords, or areas for improvement. Output a bulleted list of critiques and suggested rewrites."},
             {"role": "user", "content": req.content}
         ]
-        chat = client.chat.completions.create(messages=messages, model="llama-3.1-70b-versatile")
+        chat = client.chat.completions.create(
+            model="openai/gpt-oss-120b",
+            messages=messages,
+            temperature=1,
+            max_completion_tokens=2048,
+            top_p=1,
+            reasoning_effort="medium",
+            stop=None
+        )
         return {"response": chat.choices[0].message.content}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -69,7 +85,16 @@ async def tag_suggest(req: TagSuggestRequest):
             {"role": "system", "content": f"Given the content, suggest 3-5 tags. Prefer these existing tags if relevant, and warn about near-duplicates: {', '.join(req.existing_tags)}. Output only a JSON array of strings."},
             {"role": "user", "content": req.content}
         ]
-        chat = client.chat.completions.create(messages=messages, model="llama-3.1-70b-versatile", response_format={"type": "json_object"})
+        chat = client.chat.completions.create(
+            model="openai/gpt-oss-120b",
+            messages=messages,
+            temperature=1,
+            max_completion_tokens=2048,
+            top_p=1,
+            reasoning_effort="medium",
+            stop=None,
+            response_format={"type": "json_object"}
+        )
         # Note: expecting a JSON array, but JSON mode requires an object.
         # Adjusted prompt logic inside for real usage, keeping it simple here.
         return {"response": chat.choices[0].message.content}
@@ -83,7 +108,15 @@ async def alt_text(req: AltTextRequest):
             {"role": "system", "content": "Generate a concise, descriptive alt text for the following image description. Output only the alt text string."},
             {"role": "user", "content": req.image_description}
         ]
-        chat = client.chat.completions.create(messages=messages, model="llama-3.1-70b-versatile")
+        chat = client.chat.completions.create(
+            model="openai/gpt-oss-120b",
+            messages=messages,
+            temperature=1,
+            max_completion_tokens=2048,
+            top_p=1,
+            reasoning_effort="medium",
+            stop=None
+        )
         return {"response": chat.choices[0].message.content.strip()}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -95,7 +128,15 @@ async def mermaid_assist(req: MermaidAssistRequest):
             {"role": "system", "content": "You are a mermaid.js expert. Convert the natural language description into valid mermaid syntax. Output ONLY the raw mermaid code without markdown codeblocks or backticks."},
             {"role": "user", "content": req.description}
         ]
-        chat = client.chat.completions.create(messages=messages, model="llama-3.1-70b-versatile")
+        chat = client.chat.completions.create(
+            model="openai/gpt-oss-120b",
+            messages=messages,
+            temperature=1,
+            max_completion_tokens=2048,
+            top_p=1,
+            reasoning_effort="medium",
+            stop=None
+        )
         content = chat.choices[0].message.content
         if content.startswith("```mermaid"):
             content = content.replace("```mermaid", "").replace("```", "").strip()

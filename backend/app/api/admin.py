@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.core.security import get_current_admin
 from app.db.database import get_db
-from app.models import Project, BlogPost, FieldNote, Tag, SiteSettings, HomeContent, AboutContent, ActivityLog
+from app.models import Project, ProjectVideo, BlogPost, FieldNote, Tag, SiteSettings, HomeContent, AboutContent, ActivityLog
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from fastapi import UploadFile, File
@@ -88,6 +88,26 @@ async def delete_project(id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     if not db_project:
         raise HTTPException(status_code=404, detail="Project not found")
     await db.delete(db_project)
+    await db.commit()
+
+@router.post("/projects/{id}/videos", response_model=schemas.ProjectVideoResponse, status_code=status.HTTP_201_CREATED)
+async def create_project_video(id: uuid.UUID, video: schemas.ProjectVideoCreate, db: AsyncSession = Depends(get_db)):
+    db_project = await db.get(Project, id)
+    if not db_project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    db_video = ProjectVideo(project_id=id, **video.model_dump())
+    db.add(db_video)
+    await db.commit()
+    await db.refresh(db_video)
+    return db_video
+
+@router.delete("/projects/{id}/videos/{video_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_project_video(id: uuid.UUID, video_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    db_video = await db.get(ProjectVideo, video_id)
+    if not db_video or db_video.project_id != id:
+        raise HTTPException(status_code=404, detail="Project video not found")
+    await db.delete(db_video)
     await db.commit()
 
 # --- Posts ---
@@ -200,6 +220,27 @@ async def list_tags(db: AsyncSession = Depends(get_db)):
 async def create_tag(tag: schemas.TagCreate, db: AsyncSession = Depends(get_db)):
     db_tag = Tag(**tag.model_dump())
     db.add(db_tag)
+    await db.commit()
+    await db.refresh(db_tag)
+    return db_tag
+
+@router.get("/tags/{id}", response_model=schemas.TagResponse)
+async def get_tag(id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    db_tag = await db.get(Tag, id)
+    if not db_tag:
+        raise HTTPException(status_code=404, detail="Tag not found")
+    return db_tag
+
+@router.put("/tags/{id}", response_model=schemas.TagResponse)
+async def update_tag(id: uuid.UUID, tag: schemas.TagUpdate, db: AsyncSession = Depends(get_db)):
+    db_tag = await db.get(Tag, id)
+    if not db_tag:
+        raise HTTPException(status_code=404, detail="Tag not found")
+    
+    update_data = tag.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_tag, key, value)
+        
     await db.commit()
     await db.refresh(db_tag)
     return db_tag

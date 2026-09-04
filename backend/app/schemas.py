@@ -26,6 +26,16 @@ class ProjectVideoResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class ProjectVideoCreate(BaseModel):
+    youtube_url: str
+    label: str
+    order_index: Optional[int] = 0
+
+class ProjectVideoUpdate(BaseModel):
+    youtube_url: Optional[str] = None
+    label: Optional[str] = None
+    order_index: Optional[int] = None
+
 class ProjectResponse(BaseModel):
     id: uuid.UUID
     slug: str
@@ -38,6 +48,8 @@ class ProjectResponse(BaseModel):
     is_published: bool
     featured: bool
     order_index: Optional[int]
+    gradient_from: Optional[str] = None
+    gradient_to: Optional[str] = None
     aside_quote: Optional[str]
     body: str
     date_started: Optional[date]
@@ -138,6 +150,8 @@ class ProjectCreate(BaseModel):
     is_published: bool = False
     featured: bool = False
     order_index: Optional[int] = None
+    gradient_from: Optional[str] = None
+    gradient_to: Optional[str] = None
     aside_quote: Optional[str] = None
     body: str
     date_started: Optional[date] = None
@@ -149,7 +163,10 @@ class ProjectUpdate(ProjectCreate):
     summary: Optional[str] = None
     thumbnail_url: Optional[str] = None
     status: Optional[str] = None
+    gradient_from: Optional[str] = None
+    gradient_to: Optional[str] = None
     body: Optional[str] = None
+    tags: Optional[List[uuid.UUID]] = None
 
 class BlogPostCreate(BaseModel):
     title: str
@@ -169,6 +186,7 @@ class BlogPostUpdate(BlogPostCreate):
     slug: Optional[str] = None
     teaser: Optional[str] = None
     body: Optional[str] = None
+    tags: Optional[List[uuid.UUID]] = None
 
 class FieldNoteCreate(BaseModel):
     photo_url: str
@@ -181,10 +199,15 @@ class FieldNoteCreate(BaseModel):
 
 class FieldNoteUpdate(FieldNoteCreate):
     photo_url: Optional[str] = None
+    tags: Optional[List[uuid.UUID]] = None
 
 class TagCreate(BaseModel):
     name: str
     type: str
+
+class TagUpdate(BaseModel):
+    name: Optional[str] = None
+    type: Optional[str] = None
 
 class SiteSettingsUpdate(BaseModel):
     name: str

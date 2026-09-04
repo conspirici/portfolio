@@ -96,6 +96,8 @@ class Project(Base):
     is_published: Mapped[bool] = mapped_column(Boolean, default=False)
     featured: Mapped[bool] = mapped_column(Boolean, default=False)
     order_index: Mapped[Optional[int]] = mapped_column(Integer)
+    gradient_from: Mapped[Optional[str]] = mapped_column(String)
+    gradient_to: Mapped[Optional[str]] = mapped_column(String)
     aside_quote: Mapped[Optional[str]] = mapped_column(Text)
     body: Mapped[str] = mapped_column(Text, nullable=False)
     date_started: Mapped[Optional[date]] = mapped_column(Date)

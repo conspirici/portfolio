@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { PrintedPhotoFrame } from '@/components/ui/PrintedPhotoFrame';
 import { TagPill } from '@/components/ui/TagPill';
 import { fetchApi } from '@/lib/api';
 
@@ -15,6 +14,8 @@ interface ProjectResponse {
   title: string;
   summary: string;
   thumbnail_url: string;
+  gradient_from?: string;
+  gradient_to?: string;
   tags: TagResponse[];
 }
 
@@ -47,22 +48,27 @@ export default async function WorkPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
             {projects.map((project) => (
-              <Link href={`/work/${project.slug}`} key={project.slug} className="group flex flex-col bg-white/5 backdrop-blur-sm p-4 border border-sage-white/10 hover:bg-white/10 transition-colors">
-                <div className="mb-6 transition-transform group-hover:-translate-y-1 overflow-hidden">
-                  <PrintedPhotoFrame 
-                    src={project.thumbnail_url}
-                    alt={project.title}
-                    width={800}
-                    height={600}
-                  />
-                </div>
+              <Link href={`/work/${project.slug}`} key={project.slug} className="group flex flex-col bg-white/5 backdrop-blur-sm p-6 border border-sage-white/10 hover:bg-white/10 transition-colors">
+                <div 
+                  className="mb-6 h-48 w-full transition-transform group-hover:-translate-y-1"
+                  style={{
+                    background: project.gradient_from && project.gradient_to 
+                      ? `linear-gradient(to right, ${project.gradient_from}, ${project.gradient_to})`
+                      : 'linear-gradient(to right, #4b5563, #1f2937)'
+                  }}
+                />
                 <h2 className="font-display text-2xl text-sage-white mb-3 group-hover:text-white transition-colors">{project.title}</h2>
                 <p className="font-sans text-sage-white/70 mb-5 flex-grow">{project.summary}</p>
-                <div className="flex flex-wrap gap-2">
+                
+                <div className="flex flex-wrap gap-2 mb-4">
                   {project.tags.map((tag) => (
                     <TagPill key={tag.id} label={tag.name} type="tech" className="bg-transparent border-sage-white/30 text-sage-white/80" />
                   ))}
                 </div>
+                
+                <span className="font-mono text-[12px] tracking-wider text-sage-white underline decoration-sage-white/30 underline-offset-4 group-hover:decoration-sage-white/100 transition-colors mt-auto">
+                  VIEW PROJECT
+                </span>
               </Link>
             ))}
           </div>

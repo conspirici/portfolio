@@ -33,15 +33,22 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             
+            echo "Taking Database Backup..."
+            mkdir -p backups
+            # We use a temporary postgres container to run pg_dump using the DATABASE_URL from .env
+            docker run --rm --env-file backend/.env -v $(pwd)/backups:/backups postgres:15-alpine sh -c 'pg_dump $DATABASE_URL > /backups/backup_$(date +%s).sql'
+            
             echo "Rebuilding API Docker image..."
             docker compose build api
             
+            echo "Running Database Migrations..."
+            # Run the migration in an ephemeral container BEFORE restarting the main app
+            docker compose run --rm api alembic upgrade head
+            
             echo "Restarting API container (zero-downtime recreation)..."
-            # Recreates only the API service without taking down other potential services
             docker compose up -d --no-deps api
             
             echo "Waiting for container to report healthy..."
-            # Wait up to 60 seconds for the healthcheck to pass
             for i in {1..12}; do
               STATUS=$(docker inspect --format='{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}' $(docker compose ps -q api))
               if [ "$STATUS" == "healthy" ]; then
