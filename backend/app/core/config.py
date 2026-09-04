@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     # Provide a default valid asyncpg URL for local/testing
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/portfolio"
     sentry_dsn: str | None = None
-    allowed_origins: list[str] = ["*"]
+    allowed_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001"]
     frontend_url: str = "http://localhost:3000"
     admin_email: str = ""
     
