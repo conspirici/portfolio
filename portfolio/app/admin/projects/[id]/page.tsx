@@ -52,6 +52,7 @@ export default function EditProject() {
   const [videos, setVideos] = useState<any[]>([]);
   const [newVideoUrl, setNewVideoUrl] = useState("");
   const [newVideoLabel, setNewVideoLabel] = useState("");
+  const [newTag, setNewTag] = useState("");
 
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
@@ -115,6 +116,22 @@ export default function EditProject() {
     }
     loadTags();
   }, [id, isNew]);
+
+  const handleCreateTag = async () => {
+    if (!newTag.trim()) return;
+    try {
+      const res = await fetchApi('/admin/tags', {
+        method: "POST",
+        body: JSON.stringify({ name: newTag.trim(), type: "tech" })
+      });
+      setAvailableTags([...availableTags, res]);
+      setSelectedTags([...selectedTags, res.id]);
+      setNewTag("");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to create tag");
+    }
+  };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -362,24 +379,7 @@ export default function EditProject() {
               </div>
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-sage-white/70 mb-1">Thumbnail URL</label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={thumbnailUrl}
-                onChange={(e) => setThumbnailUrl(e.target.value)}
-                className="flex-1 px-4 py-2 bg-black border border-forest-800 text-white focus:outline-none focus:border-white transition-colors"
-              />
-              <label className="bg-forest-800 hover:bg-forest-700 text-sage-white px-4 py-2 cursor-pointer transition-colors whitespace-nowrap">
-                {uploading ? "Uploading..." : "Upload Image"}
-                <input type="file" className="hidden" accept="image/*" onChange={handleUpload} disabled={uploading} />
-              </label>
-            </div>
-            {thumbnailUrl && (
-              <img src={thumbnailUrl} alt="Thumbnail preview" className="mt-4 h-32 object-cover border border-forest-800" />
-            )}
-          </div>
+
           <div className="flex items-center space-x-3">
             <input
               type="checkbox"
@@ -395,6 +395,9 @@ export default function EditProject() {
           <div>
             <label className="block text-sm font-medium text-sage-white/70 mb-2">Tags</label>
             <div className="flex flex-wrap gap-2">
+              {availableTags.length === 0 && (
+                <div className="text-sage-white/50 text-sm">No tags created yet. Create one below.</div>
+              )}
               {availableTags.map(tag => (
                 <button
                   key={tag.id}
@@ -414,6 +417,23 @@ export default function EditProject() {
                   {tag.name}
                 </button>
               ))}
+            </div>
+            <div className="flex gap-2 mt-3">
+              <input 
+                type="text" 
+                value={newTag} 
+                onChange={(e) => setNewTag(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleCreateTag(); }}
+                placeholder="New tag name"
+                className="px-3 py-1 text-sm bg-black border border-forest-800 text-white focus:outline-none focus:border-white transition-colors"
+              />
+              <button 
+                onClick={handleCreateTag} 
+                disabled={!newTag.trim()}
+                className="bg-forest-800 hover:bg-forest-700 text-sage-white px-3 py-1 text-sm transition-colors disabled:opacity-50"
+              >
+                Create
+              </button>
             </div>
           </div>
         </div>
