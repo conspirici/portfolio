@@ -38,8 +38,6 @@ class ProjectResponse(BaseModel):
     is_published: bool
     featured: bool
     order_index: Optional[int]
-    gradient_from: Optional[str] = None
-    gradient_to: Optional[str] = None
     aside_quote: Optional[str]
     body: str
     date_started: Optional[date]
@@ -140,8 +138,6 @@ class ProjectCreate(BaseModel):
     is_published: bool = False
     featured: bool = False
     order_index: Optional[int] = None
-    gradient_from: Optional[str] = None
-    gradient_to: Optional[str] = None
     aside_quote: Optional[str] = None
     body: str
     date_started: Optional[date] = None
@@ -153,19 +149,7 @@ class ProjectUpdate(ProjectCreate):
     summary: Optional[str] = None
     thumbnail_url: Optional[str] = None
     status: Optional[str] = None
-    gradient_from: Optional[str] = None
-    gradient_to: Optional[str] = None
     body: Optional[str] = None
-
-class ProjectVideoCreate(BaseModel):
-    youtube_url: str
-    label: str
-    order_index: int = 0
-
-class ProjectVideoUpdate(ProjectVideoCreate):
-    youtube_url: Optional[str] = None
-    label: Optional[str] = None
-    order_index: Optional[int] = None
 
 class BlogPostCreate(BaseModel):
     title: str

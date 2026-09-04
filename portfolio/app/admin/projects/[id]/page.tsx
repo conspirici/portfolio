@@ -43,16 +43,6 @@ export default function EditProject() {
   const [body, setBody] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [status, setStatus] = useState("draft");
-  const [gradientFrom, setGradientFrom] = useState("#288760");
-  const [gradientTo, setGradientTo] = useState("#075057");
-  const [liveUrl, setLiveUrl] = useState("");
-  const [githubUrl, setGithubUrl] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [availableTags, setAvailableTags] = useState<any[]>([]);
-  const [videos, setVideos] = useState<any[]>([]);
-  const [newVideoUrl, setNewVideoUrl] = useState("");
-  const [newVideoLabel, setNewVideoLabel] = useState("");
-  const [newTag, setNewTag] = useState("");
 
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
@@ -91,12 +81,6 @@ export default function EditProject() {
           setBody(data.body || "");
           setThumbnailUrl(data.thumbnail_url || "");
           setStatus(data.status || "draft");
-          setGradientFrom(data.gradient_from || "#288760");
-          setGradientTo(data.gradient_to || "#075057");
-          setLiveUrl(data.live_url || "");
-          setGithubUrl(data.github_url || "");
-          setSelectedTags(data.tags?.map((t: any) => t.id) || []);
-          setVideos(data.videos || []);
         } catch (err) {
           console.error(err);
         } finally {
@@ -105,33 +89,7 @@ export default function EditProject() {
       }
       load();
     }
-    
-    async function loadTags() {
-      try {
-        const tags = await fetchApi('/admin/tags');
-        setAvailableTags(tags);
-      } catch (err) {
-        console.error(err);
-      }
-    }
-    loadTags();
   }, [id, isNew]);
-
-  const handleCreateTag = async () => {
-    if (!newTag.trim()) return;
-    try {
-      const res = await fetchApi('/admin/tags', {
-        method: "POST",
-        body: JSON.stringify({ name: newTag.trim(), type: "tech" })
-      });
-      setAvailableTags([...availableTags, res]);
-      setSelectedTags([...selectedTags, res.id]);
-      setNewTag("");
-    } catch (err) {
-      console.error(err);
-      alert("Failed to create tag");
-    }
-  };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -169,11 +127,6 @@ export default function EditProject() {
         body,
         thumbnail_url: thumbnailUrl,
         status,
-        gradient_from: gradientFrom,
-        gradient_to: gradientTo,
-        live_url: liveUrl,
-        github_url: githubUrl,
-        tags: selectedTags,
       };
 
       if (isNew) {
@@ -208,43 +161,6 @@ export default function EditProject() {
     } catch (err) {
       console.error(err);
       alert("Failed to delete project");
-    }
-  };
-
-  const handleAddVideo = async () => {
-    if (isNew) {
-      alert("Please save the project first before adding videos.");
-      return;
-    }
-    if (!newVideoUrl || !newVideoLabel) return;
-    
-    try {
-      const res = await fetchApi(`/admin/projects/${id}/videos`, {
-        method: "POST",
-        body: JSON.stringify({
-          youtube_url: newVideoUrl,
-          label: newVideoLabel,
-          order_index: videos.length
-        })
-      });
-      setVideos([...videos, res]);
-      setNewVideoUrl("");
-      setNewVideoLabel("");
-    } catch (err) {
-      console.error(err);
-      alert("Failed to add video");
-    }
-  };
-
-  const handleDeleteVideo = async (videoId: string) => {
-    try {
-      await fetchApi(`/admin/projects/${id}/videos/${videoId}`, {
-        method: "DELETE"
-      });
-      setVideos(videos.filter(v => v.id !== videoId));
-    } catch (err) {
-      console.error(err);
-      alert("Failed to delete video");
     }
   };
 
@@ -319,67 +235,24 @@ export default function EditProject() {
               <option value="production">Production</option>
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-sage-white/70 mb-1">Live URL</label>
+          <div>
+            <label className="block text-sm font-medium text-sage-white/70 mb-1">Thumbnail URL</label>
+            <div className="flex gap-2">
               <input
                 type="text"
-                value={liveUrl}
-                onChange={(e) => setLiveUrl(e.target.value)}
-                className="w-full px-4 py-2 bg-black border border-forest-800 text-white focus:outline-none focus:border-white transition-colors"
-                placeholder="https://"
+                value={thumbnailUrl}
+                onChange={(e) => setThumbnailUrl(e.target.value)}
+                className="flex-1 px-4 py-2 bg-black border border-forest-800 text-white focus:outline-none focus:border-white transition-colors"
               />
+              <label className="bg-forest-800 hover:bg-forest-700 text-sage-white px-4 py-2 cursor-pointer transition-colors whitespace-nowrap">
+                {uploading ? "Uploading..." : "Upload Image"}
+                <input type="file" className="hidden" accept="image/*" onChange={handleUpload} disabled={uploading} />
+              </label>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-sage-white/70 mb-1">GitHub URL</label>
-              <input
-                type="text"
-                value={githubUrl}
-                onChange={(e) => setGithubUrl(e.target.value)}
-                className="w-full px-4 py-2 bg-black border border-forest-800 text-white focus:outline-none focus:border-white transition-colors"
-                placeholder="https://github.com/..."
-              />
-            </div>
+            {thumbnailUrl && (
+              <img src={thumbnailUrl} alt="Thumbnail preview" className="mt-4 h-32 object-cover border border-forest-800" />
+            )}
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-sage-white/70 mb-1">Gradient From</label>
-              <div className="flex gap-2">
-                <input
-                  type="color"
-                  value={gradientFrom}
-                  onChange={(e) => setGradientFrom(e.target.value)}
-                  className="w-10 h-10 bg-black border border-forest-800 cursor-pointer p-0"
-                />
-                <input
-                  type="text"
-                  value={gradientFrom}
-                  onChange={(e) => setGradientFrom(e.target.value)}
-                  className="flex-1 px-4 py-2 bg-black border border-forest-800 text-white focus:outline-none focus:border-white transition-colors font-mono uppercase text-sm"
-                  placeholder="#000000"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-sage-white/70 mb-1">Gradient To</label>
-              <div className="flex gap-2">
-                <input
-                  type="color"
-                  value={gradientTo}
-                  onChange={(e) => setGradientTo(e.target.value)}
-                  className="w-10 h-10 bg-black border border-forest-800 cursor-pointer p-0"
-                />
-                <input
-                  type="text"
-                  value={gradientTo}
-                  onChange={(e) => setGradientTo(e.target.value)}
-                  className="flex-1 px-4 py-2 bg-black border border-forest-800 text-white focus:outline-none focus:border-white transition-colors font-mono uppercase text-sm"
-                  placeholder="#000000"
-                />
-              </div>
-            </div>
-          </div>
-
           <div className="flex items-center space-x-3">
             <input
               type="checkbox"
@@ -392,111 +265,6 @@ export default function EditProject() {
               Published (visible on public site)
             </label>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-sage-white/70 mb-2">Tags</label>
-            <div className="flex flex-wrap gap-2">
-              {availableTags.length === 0 && (
-                <div className="text-sage-white/50 text-sm">No tags created yet. Create one below.</div>
-              )}
-              {availableTags.map(tag => (
-                <button
-                  key={tag.id}
-                  onClick={() => {
-                    if (selectedTags.includes(tag.id)) {
-                      setSelectedTags(selectedTags.filter(id => id !== tag.id));
-                    } else {
-                      setSelectedTags([...selectedTags, tag.id]);
-                    }
-                  }}
-                  className={`px-3 py-1 text-sm font-mono transition-colors border ${
-                    selectedTags.includes(tag.id)
-                      ? "bg-white text-black border-white"
-                      : "bg-black text-sage-white/70 border-forest-800 hover:border-sage-white/50"
-                  }`}
-                >
-                  {tag.name}
-                </button>
-              ))}
-            </div>
-            <div className="flex gap-2 mt-3">
-              <input 
-                type="text" 
-                value={newTag} 
-                onChange={(e) => setNewTag(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleCreateTag(); }}
-                placeholder="New tag name"
-                className="px-3 py-1 text-sm bg-black border border-forest-800 text-white focus:outline-none focus:border-white transition-colors"
-              />
-              <button 
-                onClick={handleCreateTag} 
-                disabled={!newTag.trim()}
-                className="bg-forest-800 hover:bg-forest-700 text-sage-white px-3 py-1 text-sm transition-colors disabled:opacity-50"
-              >
-                Create
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-forest-900 border border-forest-800 p-6">
-          <label className="block text-sm font-medium text-sage-white/70 mb-4">Project Videos</label>
-          {isNew ? (
-            <div className="text-sage-white/50 text-sm">Save the project first to add videos.</div>
-          ) : (
-            <div className="space-y-4">
-              {videos.length > 0 && (
-                <div className="space-y-2 mb-6">
-                  {videos.map((video) => (
-                    <div key={video.id} className="flex items-center justify-between bg-black p-3 border border-forest-800">
-                      <div>
-                        <div className="text-white font-medium">{video.label}</div>
-                        <div className="text-sage-white/60 text-xs font-mono">{video.youtube_url}</div>
-                      </div>
-                      <button 
-                        onClick={() => handleDeleteVideo(video.id)}
-                        className="text-red-400 hover:text-red-300 text-sm"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              
-              <div className="bg-black p-4 border border-forest-800">
-                <h4 className="text-white text-sm mb-3">Add New Video</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-xs text-sage-white/70 mb-1">YouTube URL</label>
-                    <input
-                      type="text"
-                      value={newVideoUrl}
-                      onChange={(e) => setNewVideoUrl(e.target.value)}
-                      className="w-full px-3 py-2 bg-forest-900 border border-forest-800 text-white focus:outline-none focus:border-white transition-colors text-sm"
-                      placeholder="https://youtube.com/watch?v=..."
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-sage-white/70 mb-1">Label</label>
-                    <input
-                      type="text"
-                      value={newVideoLabel}
-                      onChange={(e) => setNewVideoLabel(e.target.value)}
-                      className="w-full px-3 py-2 bg-forest-900 border border-forest-800 text-white focus:outline-none focus:border-white transition-colors text-sm"
-                      placeholder="e.g. Platform Walkthrough"
-                    />
-                  </div>
-                </div>
-                <button
-                  onClick={handleAddVideo}
-                  disabled={!newVideoUrl || !newVideoLabel}
-                  className="bg-white text-black px-4 py-2 text-sm font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50"
-                >
-                  Add Video
-                </button>
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="bg-forest-900 border border-forest-800 p-6">
