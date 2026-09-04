@@ -5,8 +5,25 @@ on:
     branches: [main]
 
 jobs:
-  frontend-build:
+  integration-test:
     runs-on: ubuntu-latest
+    
+    # We define a service to spin up an ephemeral postgres database for the CI
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: portfolio_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v4
       
@@ -17,14 +34,40 @@ jobs:
           cache: 'npm'
           cache-dependency-path: portfolio/package-lock.json
           
-      - name: Install dependencies
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+          
+      - name: Install backend dependencies
+        run: cd backend && pip install -r requirements.txt
+        
+      - name: Run Database Migrations
+        env:
+          DATABASE_URL: "postgresql+asyncpg://postgres:password@localhost:5432/portfolio_test"
+          PYTHONPATH: "."
+        run: cd backend && alembic upgrade head
+        
+      - name: Start FastAPI Backend
+        env:
+          DATABASE_URL: "postgresql+asyncpg://postgres:password@localhost:5432/portfolio_test"
+          ALLOWED_ORIGINS: '["*"]'
+          PYTHONPATH: "."
+        run: |
+          cd backend
+          uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          # Wait for the backend to be ready
+          sleep 5
+          curl -f http://127.0.0.1:8000/openapi.json || (echo "Backend failed to start" && exit 1)
+          
+      - name: Install frontend dependencies
         run: cd portfolio && npm ci
         
       - name: Build Next.js
-        run: cd portfolio && npm run build
         env:
-          # We provide a dummy URL just so Next.js can build successfully
-          NEXT_PUBLIC_API_BASE_URL: "http://placeholder:8000/api"
+          NEXT_PUBLIC_API_BASE_URL: "http://127.0.0.1:8000/api"
+        run: cd portfolio && npm run build
 
   backend-check:
     runs-on: ubuntu-latest
