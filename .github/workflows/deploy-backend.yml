@@ -36,7 +36,7 @@ jobs:
             echo "Taking Database Backup..."
             mkdir -p backups
             # Extract DATABASE_URL and strip "+asyncpg" since pg_dump doesn't recognize the asyncpg driver prefix
-            DB_URL=$(grep -m 1 '^DATABASE_URL=' backend/.env | cut -d '=' -f 2- | tr -d '"' | tr -d "'" | sed 's/+asyncpg//')
+            DB_URL=$(grep -m 1 '^DATABASE_URL=' backend/.env | cut -d '=' -f 2- | tr -d '"' | tr -d "'" | sed 's/+asyncpg//' | sed 's/\?ssl\(=true\)\?/\?sslmode=require/')
             docker run --rm -e DATABASE_URL="$DB_URL" -v $(pwd)/backups:/backups postgres:15-alpine sh -c 'pg_dump "$DATABASE_URL" > /backups/backup_$(date +%s).sql'
             
             echo "Rebuilding API Docker image..."
