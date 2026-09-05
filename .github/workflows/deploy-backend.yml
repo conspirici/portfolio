@@ -43,8 +43,10 @@ jobs:
             docker compose build api
             
             echo "Running Database Migrations..."
-            # Run the migration in an ephemeral container BEFORE restarting the main app
-            docker compose run --rm api alembic upgrade head
+            # Migrations (DDL) fail over PgBouncer transaction pools (like Neon's -pooler URL).
+            # We strip '-pooler' to force a direct connection to the database exclusively for migrations.
+            DIRECT_URL=$(grep -m 1 '^DATABASE_URL=' backend/.env | cut -d '=' -f 2- | tr -d '"' | tr -d "'" | sed 's/-pooler//')
+            docker compose run --rm -e DATABASE_URL="$DIRECT_URL" api alembic upgrade head
             
             echo "Restarting API container (zero-downtime recreation)..."
             docker compose up -d --no-deps api
