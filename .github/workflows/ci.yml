@@ -93,9 +93,3 @@ jobs:
       
       - name: Test Docker Build
         run: cd backend && docker build -t portfolio-api-test .
-
-  frontend-build:
-    runs-on: ubuntu-latest
-    needs: integration-test
-    steps:
-      - run: echo "Frontend build is now handled inside integration-test. This dummy job satisfies GitHub's required checks."
