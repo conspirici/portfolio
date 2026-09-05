@@ -35,9 +35,9 @@ jobs:
             
             echo "Taking Database Backup..."
             mkdir -p backups
-            # Extract only the DATABASE_URL since docker's env-file parser breaks on multi-line JSON secrets
-            DB_URL=$(grep -m 1 '^DATABASE_URL=' backend/.env | cut -d '=' -f 2- | tr -d '"' | tr -d "'")
-            docker run --rm -e DATABASE_URL="$DB_URL" -v $(pwd)/backups:/backups postgres:15-alpine sh -c 'pg_dump $DATABASE_URL > /backups/backup_$(date +%s).sql'
+            # Extract DATABASE_URL and strip "+asyncpg" since pg_dump doesn't recognize the asyncpg driver prefix
+            DB_URL=$(grep -m 1 '^DATABASE_URL=' backend/.env | cut -d '=' -f 2- | tr -d '"' | tr -d "'" | sed 's/+asyncpg//')
+            docker run --rm -e DATABASE_URL="$DB_URL" -v $(pwd)/backups:/backups postgres:15-alpine sh -c 'pg_dump "$DATABASE_URL" > /backups/backup_$(date +%s).sql'
             
             echo "Rebuilding API Docker image..."
             docker compose build api
