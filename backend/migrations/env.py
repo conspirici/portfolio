@@ -7,6 +7,13 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
+import sys
+from pathlib import Path
+
+# Add the parent directory of 'migrations' to sys.path
+# This makes 'app' importable regardless of current working directory.
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 # Import our models and settings
 from app.models import Base
 from app.core.config import settings
