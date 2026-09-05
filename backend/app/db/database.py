@@ -13,7 +13,11 @@ engine = create_async_engine(
     pool_recycle=300,
     pool_size=3,
     max_overflow=5,
-    connect_args={"server_settings": {"search_path": "public"}},
+    connect_args={
+        "server_settings": {"search_path": "public"},
+        "statement_cache_size": 0,
+        "prepared_statement_cache_size": 0,
+    },
 )
 
 AsyncSessionLocal = async_sessionmaker(
