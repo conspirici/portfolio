@@ -121,13 +121,13 @@ export default function AdminHomeContent() {
   if (loading) return <AdminPageLoader />;
 
   return (
-    <div className="p-10 max-w-4xl">
-      <div className="flex justify-between items-center mb-8">
+    <div className="p-4 md:p-10 max-w-4xl">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <h1 className="text-3xl font-bold">Home Content</h1>
         <button 
           onClick={handleSave}
           disabled={saving}
-          className="bg-white text-black px-4 py-2 font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50"
+          className="bg-white text-black px-4 py-2 font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50 w-full sm:w-auto"
         >
           {saving ? "Saving..." : "Save Changes"}
         </button>
