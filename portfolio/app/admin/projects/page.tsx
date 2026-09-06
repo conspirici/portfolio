@@ -32,19 +32,19 @@ export default function AdminProjects() {
   }, []);
 
   return (
-    <div className="p-10">
-      <div className="flex justify-between items-center mb-8">
+    <div className="p-4 md:p-10">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <h1 className="text-3xl font-bold">Projects</h1>
         <Link 
           href="/admin/projects/new" 
-          className="bg-white text-black px-4 py-2 font-semibold hover:bg-gray-200 transition-colors"
+          className="bg-white text-black px-4 py-2 font-semibold hover:bg-gray-200 transition-colors w-full sm:w-auto text-center"
         >
           New Project
         </Link>
       </div>
 
-      <div className="bg-forest-900 border border-forest-800 overflow-hidden">
-        <table className="w-full text-left">
+      <div className="bg-forest-900 border border-forest-800 overflow-x-auto">
+        <table className="w-full text-left min-w-[600px]">
           <thead className="bg-forest-800/50 text-sage-white/70 text-sm border-b border-forest-800">
             <tr>
               <th className="px-6 py-4 font-medium">Title</th>

@@ -271,10 +271,10 @@ export default function EditProject() {
   }
 
   return (
-    <div className="p-10 max-w-5xl">
-      <div className="flex justify-between items-center mb-8">
+    <div className="p-4 md:p-10 max-w-5xl">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <h1 className="text-3xl font-bold">{isNew ? "New Project" : "Edit Project"}</h1>
-        <div className="space-x-4">
+        <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
           <Link href="/admin/projects" className="text-sage-white/70 hover:text-white transition-colors">
             Cancel
           </Link>
@@ -289,7 +289,7 @@ export default function EditProject() {
           <button 
             onClick={handleSave}
             disabled={saving}
-            className="bg-white text-black px-4 py-2 font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50"
+            className="bg-white text-black px-4 py-2 font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50 w-full sm:w-auto"
           >
             {saving ? "Saving..." : "Save Changes"}
           </button>
