@@ -77,6 +77,8 @@ The `docker-compose.yml` defines a single service (`api`):
 Must be populated in `/srv/portfolio/backend/.env` on the server:
 - `ENVIRONMENT` (Set to "production")
 - `ALLOWED_ORIGINS` (e.g., `["https://mansoor-syed.netlify.app", "https://your-custom-domain.com"]`)
+- `FRONTEND_URL` (public URL of the Next.js site, e.g. `https://www.your-domain.com`; use the final host, not one that redirects)
+- `REVALIDATION_SECRET` (shared with the frontend's `REVALIDATION_SECRET`; lets a CMS save refresh the cached public pages immediately)
 - `DATABASE_URL` (Neon asyncpg URL)
 - `ADMIN_EMAIL`
 - `GOOGLE_CREDENTIALS_JSON` (Firebase Service Account JSON string)
@@ -91,8 +93,8 @@ Must be populated in `/srv/portfolio/backend/.env` on the server:
 - **Safe**. The Dockerfile runs `adduser --disabled-password --no-create-home appuser` and drops privileges via `USER appuser` prior to runtime.
 
 ### 13 & 14. Health Checks
-- **Docker Healthcheck**: Implemented via `curl -f http://localhost:8000/api/public/site-settings`.
-- **FastAPI Endpoint**: The `/api/public/site-settings` endpoint acts as the health check. It validates the API is responsive and can successfully query the database.
+- **Docker Healthcheck**: Implemented via `curl -f http://localhost:8000/api/health`.
+- **FastAPI Endpoint**: `/api/health` is a liveness probe that deliberately does **not** query the database. The healthcheck runs every 30s; pointing it at a DB-backed route keeps the Neon compute from ever auto-suspending and exhausts the plan's monthly quota (`InsufficientResourcesError`). The deploy workflow still does a one-off DB-backed check against `/api/public/site-settings` after each release.
 
 ### 15. Reverse Proxy Assumptions
 - The application currently lacks reverse-proxy awareness. Because it sits behind Cloudflare -> Caddy, the client IP address will appear as Caddy's internal Docker IP (or localhost). 

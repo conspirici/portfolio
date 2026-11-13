@@ -113,7 +113,7 @@ class HomeContentResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class AboutContentResponse(BaseModel):
-    headline: str
+    headline: Optional[str] = None
     portrait_url: str
     tags: List[str]
     body: str
