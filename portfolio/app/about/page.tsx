@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { fetchApi } from '@/lib/api';
+import { fetchContent } from '@/lib/content';
 import { MDXRemote } from 'next-mdx-remote/rsc';
 import { Button } from '@/components/ui/Button';
 import { site } from '@/config/site';
@@ -42,12 +42,7 @@ const STICKERS = [
 ];
 
 export default async function AboutPage() {
-  let aboutData: AboutContentResponse | null = null;
-  try {
-    aboutData = await fetchApi('/public/about-content', { next: { tags: ['about-content'] } });
-  } catch (error) {
-    console.error('Error fetching about content:', error);
-  }
+  const aboutData = await fetchContent<AboutContentResponse>('/public/about-content', 'about-content');
 
   // ── Empty state ─────────────────────────────────────────────────────────────
   if (!aboutData) {
@@ -87,17 +82,20 @@ export default async function AboutPage() {
         />
 
         {/* ── Portrait (Bottom Center) ──────────────────────────────────────── */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-10 w-full max-w-[400px]">
-          <Image
-            src={aboutData.portrait_url}
-            alt={site.name}
-            width={600}
-            height={800}
-            priority
-            className="w-full h-auto object-cover block"
-            style={{ filter: 'grayscale(100%)' }}
-          />
-        </div>
+        {/* next/image throws on an empty src, so skip it until a portrait is uploaded */}
+        {aboutData.portrait_url && (
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-10 w-full max-w-[400px]">
+            <Image
+              src={aboutData.portrait_url}
+              alt={site.name}
+              width={600}
+              height={800}
+              priority
+              className="w-full h-auto object-cover block"
+              style={{ filter: 'grayscale(100%)' }}
+            />
+          </div>
+        )}
 
         {/* ── Headline (Left Side) ─────────────────────────────────────────── */}
         {aboutData.headline && (
@@ -152,7 +150,7 @@ export default async function AboutPage() {
             
             return (
               <div
-                key={tag}
+                key={`${tag}-${i}`}
                 className="absolute font-mono text-forest-900 whitespace-nowrap"
                 style={{
                   top: pos.top,

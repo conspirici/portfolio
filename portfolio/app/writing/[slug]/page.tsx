@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { fetchApi } from "@/lib/api";
+import { fetchContent } from "@/lib/content";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { Aside, ImageCarousel, ImageGrid, VideoEmbed, Mermaid } from "@/components/mdx";
 import { sharedRehypePlugins } from "@/lib/mdx-plugins";
@@ -51,13 +51,9 @@ export default async function ArticlePage({
   const { slug } = await params;
   if (!slug) notFound();
 
-  let post: BlogPostResponse | null = null;
-  try {
-    post = await fetchApi(`/public/posts/${slug}`, { next: { revalidate: 60 } });
-  } catch {
-    notFound();
-  }
-
+  // 404s only when the post really is missing/unpublished; an API outage throws
+  // instead, so a cached copy of the article keeps being served.
+  const post = await fetchContent<BlogPostResponse>(`/public/posts/${encodeURIComponent(slug)}`, 'posts');
   if (!post) notFound();
 
   return (

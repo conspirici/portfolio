@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from 'next/link';
-import { fetchApi } from '@/lib/api';
+import { fetchContent } from '@/lib/content';
 
 interface TagResponse {
   id: string;
@@ -20,12 +20,7 @@ interface BlogPostResponse {
 }
 
 export default async function WritingPage() {
-  let posts: BlogPostResponse[] = [];
-  try {
-    posts = await fetchApi('/public/posts', { next: { revalidate: 60 } });
-  } catch {
-    // no posts yet
-  }
+  const posts = (await fetchContent<BlogPostResponse[]>('/public/posts', 'posts')) ?? [];
 
   return (
     <div

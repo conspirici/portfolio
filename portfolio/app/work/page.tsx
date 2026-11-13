@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { TagPill } from '@/components/ui/TagPill';
-import { fetchApi } from '@/lib/api';
+import { fetchContent } from '@/lib/content';
 
 interface TagResponse {
   id: string;
@@ -20,12 +20,7 @@ interface ProjectResponse {
 }
 
 export default async function WorkPage() {
-  let projects: ProjectResponse[] = [];
-  try {
-    projects = await fetchApi('/public/projects', { next: { revalidate: 60 } });
-  } catch (error) {
-    console.error('Error fetching projects:', error);
-  }
+  const projects = (await fetchContent<ProjectResponse[]>('/public/projects', 'projects')) ?? [];
 
   return (
     <div 
