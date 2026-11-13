@@ -47,10 +47,13 @@ export default function EditProject() {
   // New State variables for Task 5
   const [gradientFrom, setGradientFrom] = useState("");
   const [gradientTo, setGradientTo] = useState("");
-  const [videos, setVideos] = useState<any[]>([]);
+  // Mirrors the API's ProjectVideoResponse. The video with order_index 0 is the
+  // project's overview video; the rest are listed after it in order.
+  const [videos, setVideos] = useState<
+    { id: string; youtube_url: string; label: string; order_index: number }[]
+  >([]);
   const [newVideoUrl, setNewVideoUrl] = useState("");
   const [newVideoTitle, setNewVideoTitle] = useState("");
-  const [newVideoDuration, setNewVideoDuration] = useState("");
   const [newVideoIsOverview, setNewVideoIsOverview] = useState(false);
   
   const [tags, setTags] = useState<any[]>([]);
@@ -109,13 +112,7 @@ export default function EditProject() {
           setGradientFrom(data.gradient_from || "");
           setGradientTo(data.gradient_to || "");
           setTags(data.tags || []);
-          
-          try {
-            const vids = await fetchApi(`/admin/projects/${id}/videos`);
-            setVideos(vids || []);
-          } catch(e) {
-            console.error(e);
-          }
+          setVideos(data.videos || []);
         } catch (err) {
           console.error(err);
         } finally {
@@ -233,23 +230,23 @@ export default function EditProject() {
     if (!newVideoUrl || !newVideoTitle) return;
     try {
       const payload = {
-        url: newVideoUrl,
-        title: newVideoTitle,
-        duration: newVideoDuration,
-        is_overview: newVideoIsOverview
+        youtube_url: newVideoUrl,
+        label: newVideoTitle,
+        order_index: newVideoIsOverview
+          ? 0
+          : Math.max(0, ...videos.map((v) => v.order_index)) + 1,
       };
-      await fetchApi(`/admin/projects/${id}/videos`, {
+      const created = await fetchApi(`/admin/projects/${id}/videos`, {
         method: "POST",
         body: JSON.stringify(payload)
       });
-      const vids = await fetchApi(`/admin/projects/${id}/videos`);
-      setVideos(vids || []);
+      setVideos((prev) => [...prev, created]);
       setNewVideoUrl("");
       setNewVideoTitle("");
-      setNewVideoDuration("");
       setNewVideoIsOverview(false);
     } catch (err) {
       console.error(err);
+      alert("Failed to add video");
     }
   };
 
@@ -259,10 +256,10 @@ export default function EditProject() {
       await fetchApi(`/admin/projects/${id}/videos/${videoId}`, {
         method: "DELETE"
       });
-      const vids = await fetchApi(`/admin/projects/${id}/videos`);
-      setVideos(vids || []);
+      setVideos((prev) => prev.filter((v) => v.id !== videoId));
     } catch (err) {
       console.error(err);
+      alert("Failed to remove video");
     }
   };
 
@@ -461,8 +458,8 @@ export default function EditProject() {
               videos.map((vid) => (
                 <div key={vid.id} className="flex items-center justify-between bg-black p-4 border border-forest-800">
                   <div>
-                    <p className="font-medium">{vid.title} {vid.is_overview && <span className="ml-2 text-xs bg-forest-700 px-2 py-1 rounded">Overview</span>}</p>
-                    <p className="text-xs text-sage-white/60 font-mono mt-1">{vid.url} • {vid.duration || 'N/A'}</p>
+                    <p className="font-medium">{vid.label} {vid.order_index === 0 && <span className="ml-2 text-xs bg-forest-700 px-2 py-1 rounded">Overview</span>}</p>
+                    <p className="text-xs text-sage-white/60 font-mono mt-1">{vid.youtube_url}</p>
                   </div>
                   <button onClick={() => handleDeleteVideo(vid.id)} className="text-red-400 hover:text-red-300 text-sm px-3 py-1">Remove</button>
                 </div>
@@ -475,7 +472,6 @@ export default function EditProject() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <input type="text" placeholder="YouTube URL" value={newVideoUrl} onChange={e => setNewVideoUrl(e.target.value)} className="px-4 py-2 bg-forest-900 border border-forest-800 text-white text-sm" />
               <input type="text" placeholder="Title" value={newVideoTitle} onChange={e => setNewVideoTitle(e.target.value)} className="px-4 py-2 bg-forest-900 border border-forest-800 text-white text-sm" />
-              <input type="text" placeholder="Duration (e.g. 05:23)" value={newVideoDuration} onChange={e => setNewVideoDuration(e.target.value)} className="px-4 py-2 bg-forest-900 border border-forest-800 text-white text-sm" />
               <label className="flex items-center space-x-2 text-sm text-sage-white">
                 <input type="checkbox" checked={newVideoIsOverview} onChange={e => setNewVideoIsOverview(e.target.checked)} className="bg-forest-900" />
                 <span>Is Overview Video</span>
