@@ -10,9 +10,11 @@ services:
       # Caddy on the host will use `reverse_proxy 127.0.0.1:8000`
       - "127.0.0.1:8000:8000"
     restart: unless-stopped
-    # Healthchecks ensure Docker knows if the API actually started successfully
+    # Healthchecks ensure Docker knows if the API actually started successfully.
+    # /api/health does not query the database on purpose: polling a DB-backed
+    # route every 30s keeps Neon awake around the clock and exhausts its quota.
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/public/site-settings"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3

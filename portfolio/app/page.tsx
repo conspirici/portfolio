@@ -4,7 +4,7 @@ import Hero from "@/components/Hero";
 import { site } from "@/config/site";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { fetchApi } from "@/lib/api";
+import { fetchContent } from "@/lib/content";
 import { PrintedPhotoFrame } from "@/components/ui/PrintedPhotoFrame";
 import { TagPill } from "@/components/ui/TagPill";
 
@@ -45,29 +45,19 @@ interface HomeContentResponse {
 }
 
 export default async function Home() {
-  let featuredProjects: ProjectResponse[] = [];
-  let featuredPosts: BlogPostResponse[] = [];
-  let homeData: HomeContentResponse | null = null;
-
   // Try to get personalized home-content first
-  try {
-    homeData = await fetchApi('/public/home-content', { next: { tags: ['home-content'] } });
-    if ((homeData?.featured_projects?.length ?? 0) > 0) featuredProjects = homeData!.featured_projects!;
-    if ((homeData?.featured_posts?.length ?? 0) > 0) featuredPosts = homeData!.featured_posts!;
-  } catch (e) { console.error("Error fetching home content", e); }
+  const homeData = await fetchContent<HomeContentResponse>('/public/home-content', 'home-content');
+  let featuredProjects = homeData?.featured_projects ?? [];
+  let featuredPosts = homeData?.featured_posts ?? [];
 
   // Fall back to latest published content if home-content has no featured items
   if (featuredProjects.length === 0) {
-    try {
-      const all = await fetchApi('/public/projects', { next: { revalidate: 60 } });
-      featuredProjects = all.slice(0, 4);
-    } catch { /* no projects yet */ }
+    const all = await fetchContent<ProjectResponse[]>('/public/projects', 'projects');
+    featuredProjects = (all ?? []).slice(0, 4);
   }
   if (featuredPosts.length === 0) {
-    try {
-      const all = await fetchApi('/public/posts', { next: { revalidate: 60 } });
-      featuredPosts = all.slice(0, 4);
-    } catch { /* no posts yet */ }
+    const all = await fetchContent<BlogPostResponse[]>('/public/posts', 'posts');
+    featuredPosts = (all ?? []).slice(0, 4);
   }
 
   const headline = homeData?.hero_headline || "Mansoor Syed";

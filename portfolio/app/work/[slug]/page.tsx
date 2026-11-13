@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { fetchApi } from "@/lib/api";
+import { fetchContent } from "@/lib/content";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { Aside, ImageCarousel, ImageGrid, VideoEmbed, Mermaid } from "@/components/mdx";
 import VideoPlayer from "@/components/VideoPlayer";
@@ -27,18 +27,18 @@ const components = {
   },
 };
 
-interface TechStackItem {
+interface TagResponse {
   id: string;
   name: string;
-  category: string;
+  type: string;
 }
 
+// The video with order_index 0 is the project's overview video.
 interface ProjectVideo {
   id: string;
-  url: string;
-  title: string;
-  duration?: string;
-  is_overview: boolean;
+  youtube_url: string;
+  label: string;
+  order_index: number;
 }
 
 interface ProjectResponse {
@@ -51,8 +51,8 @@ interface ProjectResponse {
   live_url?: string;
   github_url?: string;
   status: string;
-  tech_stack: TechStackItem[];
-  videos?: ProjectVideo[];
+  tags: TagResponse[];
+  videos: ProjectVideo[];
 }
 
 export default async function ProjectPage({
@@ -66,21 +66,17 @@ export default async function ProjectPage({
     notFound();
   }
 
-  let project: ProjectResponse | null = null;
-  try {
-    const projects = await fetchApi(`/public/projects`, { next: { revalidate: 60 } });
-    project = projects.find((p: ProjectResponse) => p.slug === slug) || null;
-  } catch (error) {
-    console.error('Error fetching project:', error);
-    notFound();
-  }
+  // 404s only when the project really is missing/unpublished; an API outage
+  // throws instead, so a cached copy of the page keeps being served.
+  const project = await fetchContent<ProjectResponse>(`/public/projects/${encodeURIComponent(slug)}`, 'projects');
 
   if (!project) {
     notFound();
   }
-  
-  const overviewVideo = project.videos?.find(v => v.is_overview);
-  const additionalVideos = project.videos?.filter(v => !v.is_overview) || [];
+
+  const videos = [...(project.videos ?? [])].sort((a, b) => a.order_index - b.order_index);
+  const overviewVideo = videos.find(v => v.order_index === 0);
+  const additionalVideos = videos.filter(v => v !== overviewVideo);
 
   return (
     <article className="max-w-6xl mx-auto px-6 sm:px-10 py-24">
@@ -137,11 +133,7 @@ export default async function ProjectPage({
           <div className="w-full lg:w-3/4 flex flex-col">
             {overviewVideo ? (
               <div className="w-full">
-                <VideoPlayer url={overviewVideo.url} title={overviewVideo.title} />
-                <p className="mt-4 text-forest-800/70 font-sans">
-                  <strong className="text-forest-900 mr-2">Overview:</strong> 
-                  {overviewVideo.title} {overviewVideo.duration && `(${overviewVideo.duration})`}
-                </p>
+                <VideoPlayer url={overviewVideo.youtube_url} title={overviewVideo.label} />
               </div>
             ) : project.thumbnail_url ? (
                <div className="w-full h-[600px] relative overflow-hidden bg-forest-900">
@@ -165,7 +157,7 @@ export default async function ProjectPage({
               <div className="flex flex-col gap-6">
                 {additionalVideos.map((video) => (
                   <div key={video.id} className="group">
-                    <VideoPlayer url={video.url} title={video.title} duration={video.duration} />
+                    <VideoPlayer url={video.youtube_url} title={video.label} />
                   </div>
                 ))}
               </div>
@@ -175,11 +167,11 @@ export default async function ProjectPage({
       )}
 
       {/* Tech Stack Details */}
-      {project.tech_stack && project.tech_stack.length > 0 && (
+      {project.tags.length > 0 && (
          <div className="mb-16 p-6 border-y border-mist-100 flex flex-wrap gap-x-8 gap-y-4 items-center">
            <span className="font-mono text-[11px] tracking-wider text-forest-700 uppercase">Tech Stack:</span>
            <div className="flex flex-wrap gap-2">
-             {project.tech_stack.map(tech => (
+             {project.tags.map(tech => (
                <span key={tech.id} className="font-mono text-[11px] tracking-wider text-forest-900 bg-mist-50 px-3 py-1">
                  {tech.name}
                </span>

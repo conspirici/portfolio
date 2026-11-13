@@ -29,7 +29,7 @@ async def get_projects(db: AsyncSession = Depends(get_db)):
 async def get_project(slug: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(Project)
-        .where(Project.slug == slug)
+        .where(Project.slug == slug, Project.is_published == True)
         .options(selectinload(Project.tags), selectinload(Project.gallery_images), selectinload(Project.videos))
     )
     project = result.scalars().first()
@@ -51,7 +51,7 @@ async def get_posts(db: AsyncSession = Depends(get_db)):
 async def get_post(slug: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(BlogPost)
-        .where(BlogPost.slug == slug)
+        .where(BlogPost.slug == slug, BlogPost.is_published == True)
         .options(selectinload(BlogPost.tags))
     )
     post = result.scalars().first()

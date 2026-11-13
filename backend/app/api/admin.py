@@ -8,10 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from fastapi import UploadFile, File
 from app.core.upload import upload_image_to_r2
+from app.core.revalidate import schedule_revalidation
 from app import schemas
 
 router = APIRouter(
-    dependencies=[Depends(get_current_admin)],
+    # schedule_revalidation refreshes the public pages after any write below.
+    dependencies=[Depends(get_current_admin), Depends(schedule_revalidation)],
     tags=["admin"]
 )
 
@@ -312,20 +314,6 @@ async def update_home_content(content: schemas.HomeContentUpdate, db: AsyncSessi
     await db.refresh(db_content)
     return db_content
 
-import urllib.request
-import json
-from fastapi import BackgroundTasks
-
-def trigger_nextjs_revalidate(tag: str):
-    try:
-        url = f"{settings.frontend_url}/api/revalidate"
-        data = json.dumps({"tag": tag}).encode("utf-8")
-        req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'}, method='POST')
-        with urllib.request.urlopen(req, timeout=5) as response:
-            pass
-    except Exception as e:
-        print(f"Failed to revalidate {tag}: {e}")
-
 @router.get("/about-content", response_model=schemas.AboutContentResponse)
 async def get_about_content(db: AsyncSession = Depends(get_db)):
     db_content = await db.get(AboutContent, 1)
@@ -337,7 +325,7 @@ async def get_about_content(db: AsyncSession = Depends(get_db)):
     return db_content
 
 @router.put("/about-content", response_model=schemas.AboutContentResponse)
-async def update_about_content(content: schemas.AboutContentUpdate, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
+async def update_about_content(content: schemas.AboutContentUpdate, db: AsyncSession = Depends(get_db)):
     db_content = await db.get(AboutContent, 1)
     if not db_content:
         db_content = AboutContent(portrait_url="", tags=[], body="")
@@ -349,7 +337,5 @@ async def update_about_content(content: schemas.AboutContentUpdate, background_t
         
     await db.commit()
     await db.refresh(db_content)
-    
-    background_tasks.add_task(trigger_nextjs_revalidate, "about-content")
     return db_content
 

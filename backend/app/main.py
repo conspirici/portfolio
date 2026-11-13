@@ -16,7 +16,10 @@ logger = structlog.get_logger()
 if settings.sentry_dsn:
     sentry_sdk.init(
         dsn=settings.sentry_dsn,
-        traces_sample_rate=1.0,
+        environment=settings.environment,
+        # Errors are always reported; only sample performance traces so routine
+        # traffic doesn't eat the Sentry quota.
+        traces_sample_rate=0.1,
     )
 
 app = FastAPI(title=settings.app_name)
@@ -55,6 +58,14 @@ async def correlation_id_middleware(request: Request, call_next):
     
     response.headers["X-Correlation-ID"] = corr_id
     return response
+
+@app.get("/api/health", tags=["health"])
+async def health():
+    """Liveness probe. Deliberately does not touch the database: the container
+    healthcheck polls this every 30s, and a query that often would keep the
+    Neon compute awake 24/7 and burn through its monthly quota."""
+    return {"status": "ok"}
+
 
 app.include_router(public.router, prefix="/api/public")
 app.include_router(admin.router, prefix="/api/admin")

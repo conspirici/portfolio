@@ -2,6 +2,14 @@ import { auth } from "./firebase";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
+/** A non-2xx response from the API. `status` lets callers tell "not found" from "backend is down". */
+export class ApiError extends Error {
+  constructor(message: string, public readonly status: number) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
 export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   const headers = new Headers(options.headers || {});
   
@@ -27,12 +35,16 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
     let errorMessage = "API request failed";
     try {
       const errorData = await response.json();
-      errorMessage = errorData.detail || errorMessage;
-    } catch (e) {
+      if (typeof errorData.detail === "string") errorMessage = errorData.detail;
+    } catch {
       // Ignore JSON parse error if response is not JSON
     }
-    throw new Error(errorMessage);
+    throw new ApiError(errorMessage, response.status);
   }
+
+  // DELETE endpoints answer 204 with an empty body; parsing it as JSON would throw
+  // and make a successful delete look like a failure.
+  if (response.status === 204) return null;
 
   return response.json();
 }

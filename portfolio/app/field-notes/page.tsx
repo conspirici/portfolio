@@ -1,13 +1,15 @@
-import { fetchApi } from '@/lib/api';
+import { fetchContent } from '@/lib/content';
 import { FieldNotesGrid } from '@/components/FieldNotesGrid';
 
+interface FieldNote {
+  id: string;
+  photo_url: string;
+  caption?: string;
+  location?: string;
+}
+
 export default async function FieldNotesPage() {
-  let notes = [];
-  try {
-    notes = await fetchApi('/public/field-notes', { next: { revalidate: 60 } });
-  } catch (err) {
-    console.error('Failed to load field notes', err);
-  }
+  const notes = (await fetchContent<FieldNote[]>('/public/field-notes', 'field-notes')) ?? [];
 
   return (
     <div 
