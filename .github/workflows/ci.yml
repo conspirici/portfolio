@@ -86,6 +86,10 @@ jobs:
       - name: Check syntax
         run: cd backend && python -m py_compile app/main.py
 
+      # A syntax error in the deploy script would only show up mid-deploy otherwise.
+      - name: Check deploy script syntax
+        run: bash -n scripts/deploy-backend.sh
+
   docker-build:
     runs-on: ubuntu-latest
     steps:

@@ -4,74 +4,84 @@ on:
   push:
     branches:
       - main
+  # Manual run from the Actions tab. Deploys the tip of main.
+  workflow_dispatch:
 
 concurrency:
   group: deploy-backend
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     name: Deploy to Oracle Server
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    
+    timeout-minutes: 30
+    env:
+      DEPLOY_DIR: /srv/portfolio
+      DEPLOY_SHA: ${{ github.sha }}
+      SERVER_HOST: ${{ secrets.SERVER_HOST }}
+      SERVER_USER: ${{ secrets.SERVER_USER }}
+
     steps:
       - name: Configure SSH
+        env:
+          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SERVER_KNOWN_HOSTS: ${{ secrets.SERVER_KNOWN_HOSTS }}
         run: |
+          set -euo pipefail
+
+          # Fail with a clear message if a secret is missing, naming it but never printing it.
+          missing=0
+          for name in SERVER_SSH_KEY SERVER_KNOWN_HOSTS SERVER_HOST SERVER_USER; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Repository secret $name is not set."
+              missing=1
+            fi
+          done
+          [ "$missing" -eq 0 ]
+
           mkdir -p ~/.ssh
-          printf '%s\n' "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SERVER_SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          printf '%s\n' "${{ secrets.SERVER_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          printf '%s\n' "$SERVER_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
-      - name: Deploy and Verify
+      - name: Deploy and verify
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o PasswordAuthentication=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
-            set -e
-            cd /srv/portfolio
-            
-            echo "Fetching latest changes..."
-            git fetch origin main
-            git reset --hard origin/main
-            
-            echo "Taking Database Backup..."
-            mkdir -p backups
-            # Extract DATABASE_URL and strip "+asyncpg" since pg_dump doesn't recognize the asyncpg driver prefix
-            DB_URL=$(grep -m 1 '^DATABASE_URL=' backend/.env | cut -d '=' -f 2- | tr -d '"' | tr -d "'" | sed 's/+asyncpg//' | sed 's/\?.*//')
-            docker run --rm -e PGSSLMODE=require -e DATABASE_URL="$DB_URL" -v $(pwd)/backups:/backups postgres:17-alpine sh -c 'pg_dump "$DATABASE_URL" > /backups/backup_$(date +%s).sql' || echo "WARNING: Backup failed (likely due to pg_dump version mismatch). Skipping backup..."
-            
-            echo "Rebuilding API Docker image..."
-            docker compose build api
-            
-            echo "Running Database Migrations..."
-            # Migrations (DDL) fail over PgBouncer transaction pools (like Neon's -pooler URL).
-            # We strip '-pooler' to force a direct connection to the database exclusively for migrations.
-            DIRECT_URL=$(grep -m 1 '^DATABASE_URL=' backend/.env | cut -d '=' -f 2- | tr -d '"' | tr -d "'" | sed 's/-pooler//')
-            docker compose run --rm -e DATABASE_URL="$DIRECT_URL" api alembic upgrade head
-            
-            echo "Restarting API container (zero-downtime recreation)..."
-            docker compose up -d --no-deps api
-            
-            echo "Waiting for container to report healthy..."
-            for i in {1..12}; do
-              STATUS=$(docker inspect --format='{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}' $(docker compose ps -q api))
-              if [ "$STATUS" == "healthy" ]; then
-                echo "Container is healthy!"
-                break
-              fi
-              if [ "$i" -eq 12 ]; then
-                echo "Error: Container failed to become healthy. Final Status: $STATUS"
-                docker compose logs --tail=50 api
-                exit 1
-              fi
-              echo "Status: $STATUS. Waiting 5 seconds..."
-              sleep 5
-            done
-            
-            echo "Verifying local API endpoint..."
-            if ! curl -f -s -o /dev/null http://127.0.0.1:8000/api/public/site-settings; then
-              echo "Error: Internal API health check failed."
-              exit 1
-            fi
-            
-            echo "Backend successfully deployed and verified!"
-          EOF
+          set -euo pipefail
+
+          # The remote commands are passed as an argument and ssh's stdin is
+          # closed. Do NOT go back to piping a script into ssh: `docker compose
+          # run` reads stdin and swallowed everything after the migration step,
+          # so the container was never recreated while this job reported
+          # success. The real work is in scripts/deploy-backend.sh, which runs
+          # from the checkout it has just updated.
+          ssh -i ~/.ssh/id_ed25519 \
+            -o BatchMode=yes \
+            -o PasswordAuthentication=no \
+            -o StrictHostKeyChecking=yes \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=6 \
+            "${SERVER_USER}@${SERVER_HOST}" \
+            "cd '${DEPLOY_DIR}' && git fetch --quiet origin main && git reset --hard --quiet '${DEPLOY_SHA}' && bash scripts/deploy-backend.sh '${DEPLOY_SHA}'" \
+            < /dev/null 2>&1 | tee deploy.log
+
+          # Second line of defence: the script prints this line only after it
+          # has verified the new container. If the script ever ends early again
+          # with a zero exit code, this still fails the job.
+          if ! grep -qx "DEPLOY_OK ${DEPLOY_SHA}" deploy.log; then
+            echo "::error::The deploy script ended without confirming the new container. Treating this deployment as failed."
+            exit 1
+          fi
+
+          {
+            echo "### Backend deployed"
+            echo '```'
+            grep -E '^(Deployed commit|Running image|Running container):' deploy.log || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
