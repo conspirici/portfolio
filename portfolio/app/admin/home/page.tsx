@@ -168,15 +168,18 @@ export default function AdminHomeContent() {
 
         <div>
           <label className="block text-sm font-mono text-sage-white/60 uppercase tracking-wider mb-2">
-            Main Hero Portrait Image
+            Hero Background Image
           </label>
           {data.hero_image_url && (
-            <div className="mb-4 relative w-48 h-48 bg-black/40 border border-white/10">
-              <Image src={data.hero_image_url} alt="Hero Portrait" fill className="object-cover grayscale" />
+            <div className="mb-4 relative w-full max-w-md aspect-video bg-black/40 border border-white/10">
+              <Image src={data.hero_image_url} alt="Hero background" fill sizes="448px" className="object-cover" />
             </div>
           )}
           <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploadingImage} />
           {uploadingImage && <span className="ml-4 text-sage-white/60 text-sm">Uploading...</span>}
+          <p className="mt-2 text-xs text-sage-white/40">
+            Fills the whole hero section, edge to edge, and is cropped to fit the screen. Use a wide landscape photo, at least 1920px across, with the subject near the centre.
+          </p>
         </div>
 
         <div>
@@ -198,7 +201,7 @@ export default function AdminHomeContent() {
           </div>
           <input type="file" accept="image/*" onChange={handleLogoUpload} disabled={uploadingLogo} />
           {uploadingLogo && <span className="ml-4 text-sage-white/60 text-sm">Uploading...</span>}
-          <p className="mt-2 text-xs text-sage-white/40">Upload logos one by one. They will be scattered around your portrait.</p>
+          <p className="mt-2 text-xs text-sage-white/40">Upload logos one by one. They will be scattered across the hero, on top of the background image.</p>
         </div>
       </div>
     </div>
