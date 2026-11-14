@@ -61,6 +61,16 @@ export function Mermaid({ chart }: { chart: string }) {
     }
   }, [chart]);
 
+  // Escape closes the expanded diagram too.
+  useEffect(() => {
+    if (!isZoomed) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsZoomed(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isZoomed]);
+
   if (!svg) {
     return (
       <pre className="my-10 text-xs text-charcoal-green/50 p-4 border border-mist-100 overflow-x-auto">
@@ -84,26 +94,38 @@ export function Mermaid({ chart }: { chart: string }) {
         </p>
       </div>
 
-      {/* Lightbox overlay */}
+      {/* Lightbox overlay. A click or tap anywhere closes it — including on the
+          diagram itself, because on a phone the card fills nearly the whole
+          screen and leaves no "outside" to aim for. */}
       {isZoomed && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center cursor-zoom-out"
+          className="fixed inset-0 z-[100] flex items-center justify-center cursor-zoom-out"
           style={{ backgroundColor: 'rgba(245,247,244,0.85)', backdropFilter: 'blur(12px)' }}
           onClick={() => setIsZoomed(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Expanded diagram"
         >
           {/* Card sized to a comfortable portion of the screen */}
           <div
-            className="bg-white shadow-2xl p-8"
-            style={{ width: 'min(90vw, 900px)', height: 'min(90vh, 800px)', display: 'flex', flexDirection: 'column' }}
-            onClick={(e) => e.stopPropagation()}
+            className="relative bg-white shadow-2xl p-4 pt-12 sm:p-8 sm:pt-12"
+            style={{ width: 'min(94vw, 900px)', height: 'min(90dvh, 800px)', display: 'flex', flexDirection: 'column' }}
           >
+            <button
+              type="button"
+              aria-label="Close diagram"
+              onClick={() => setIsZoomed(false)}
+              className="absolute top-1 right-1 flex h-11 w-11 items-center justify-center text-2xl leading-none text-charcoal-green/60 hover:text-charcoal-green cursor-pointer"
+            >
+              &times;
+            </button>
             {/* SVG fills the card */}
             <div
               dangerouslySetInnerHTML={{ __html: svg }}
-              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
+              style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
             />
             <p className="text-center mt-4 font-mono text-[10px] tracking-wider text-charcoal-green/30 uppercase select-none">
-              Click outside to close
+              Tap or click anywhere to close
             </p>
           </div>
         </div>

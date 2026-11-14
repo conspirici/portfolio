@@ -127,7 +127,8 @@ export default async function ProjectPage({
       </header>
       
       {/* Media Section */}
-      {(overviewVideo || additionalVideos.length > 0) && (
+      {/* With no overview video the thumbnail takes its place as the cover. */}
+      {(overviewVideo || project.thumbnail_url || additionalVideos.length > 0) && (
         <section className="mb-24 flex flex-col lg:flex-row gap-8">
           {/* Overview Video - takes up most space on desktop, on top on mobile */}
           <div className="w-full lg:w-3/4 flex flex-col">
@@ -136,7 +137,7 @@ export default async function ProjectPage({
                 <VideoPlayer url={overviewVideo.youtube_url} title={overviewVideo.label} />
               </div>
             ) : project.thumbnail_url ? (
-               <div className="w-full h-[600px] relative overflow-hidden bg-forest-900">
+               <div className="w-full aspect-video relative overflow-hidden bg-forest-900">
                 <Image 
                   src={project.thumbnail_url} 
                   alt={`Thumbnail for ${project.title}`}
