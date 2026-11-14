@@ -67,25 +67,66 @@ export default async function Home() {
 
   return (
     <div>
-      {/* ─── 1. New Hero ─── */}
-      <section 
+      {/* ─── 1. Hero ─── */}
+      {/* The hero image is the section's background: it covers the whole hero,
+          edge to edge, and the text sits on top of it. Without an image the
+          section falls back to the light gradient with dark text. */}
+      <section
         id="hero-container"
-        className="relative w-full pt-8 pb-0 flex flex-col items-start justify-start overflow-hidden min-h-[90vh] md:min-h-screen"
-        style={{ background: 'linear-gradient(135deg, #F5F7F4 0%, #E8EBE6 100%)' }}
+        className="relative w-full pt-10 md:pt-16 pb-0 flex flex-col items-start justify-start overflow-hidden min-h-[calc(100svh-5rem)]"
+        style={heroImage ? { backgroundColor: '#123024' } : { background: 'linear-gradient(135deg, #F5F7F4 0%, #E8EBE6 100%)' }}
       >
-        <div className="grain-overlay opacity-[0.15]" />
+        {heroImage ? (
+          <>
+            <Image
+              id="hero-photo"
+              src={heroImage}
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover object-center"
+            />
+            {/* Scrim: darkens the top-left, where the text is, so the headline
+                stays readable whatever the photo looks like. */}
+            <div
+              className="absolute inset-0 z-[1] pointer-events-none"
+              style={{
+                background: [
+                  'linear-gradient(180deg, rgba(13,31,26,0.70) 0%, rgba(13,31,26,0.30) 50%, rgba(13,31,26,0.10) 100%)',
+                  'linear-gradient(90deg, rgba(13,31,26,0.45) 0%, rgba(13,31,26,0) 65%)',
+                ].join(', '),
+              }}
+            />
+          </>
+        ) : (
+          <div className="grain-overlay opacity-[0.15]" />
+        )}
+
         {/* TEXT CONTENT - Upper Left */}
         <div className="z-30 relative px-6 md:px-16 mt-0 w-full max-w-7xl mx-auto pointer-events-none">
           <div id="hero-text" className="max-w-[800px] inline-flex flex-col items-start pointer-events-auto">
-            <h1 className="font-display text-[40px] sm:text-5xl md:text-6xl lg:text-[72px] leading-[1.1] text-charcoal-green mb-4">
+            <h1
+              className={`font-display text-[40px] sm:text-5xl md:text-6xl lg:text-[72px] leading-[1.1] mb-4 ${
+                heroImage ? 'text-sage-white [text-shadow:0_2px_24px_rgba(0,0,0,0.35)]' : 'text-charcoal-green'
+              }`}
+            >
               {headline}
             </h1>
-            <p className="font-sans text-base md:text-lg lg:text-xl text-forest-900 mb-6 md:mb-8 max-w-[500px]">
+            <p
+              className={`font-sans text-base md:text-lg lg:text-xl mb-6 md:mb-8 max-w-[500px] ${
+                heroImage ? 'text-sage-white/90 [text-shadow:0_1px_16px_rgba(0,0,0,0.4)]' : 'text-forest-900'
+              }`}
+            >
               {subheadline}
             </p>
             <a
               href="/work"
-              className="inline-flex items-center gap-2 px-6 py-2.5 md:px-8 md:py-3 border border-forest-700 text-forest-700 font-mono text-xs md:text-sm uppercase tracking-wider hover:bg-forest-700 hover:text-sage-white transition-all cursor-pointer relative z-40 group shadow-sm bg-sage-white/50 backdrop-blur-sm"
+              className={`inline-flex items-center gap-2 px-6 py-2.5 md:px-8 md:py-3 border font-mono text-xs md:text-sm uppercase tracking-wider transition-all cursor-pointer relative z-40 group shadow-sm backdrop-blur-sm ${
+                heroImage
+                  ? 'border-sage-white text-sage-white bg-charcoal-green/30 hover:bg-sage-white hover:text-forest-900'
+                  : 'border-forest-700 text-forest-700 bg-sage-white/50 hover:bg-forest-700 hover:text-sage-white'
+              }`}
             >
               View Work
               <ArrowRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
@@ -93,20 +134,6 @@ export default async function Home() {
           </div>
         </div>
 
-        {/* HERO PORTRAIT - Bottom Center */}
-        {heroImage && (
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20 w-[90%] sm:w-[600px] md:w-[700px] lg:w-[850px] flex justify-center items-end pointer-events-none">
-            <Image 
-              id="hero-photo"
-              src={heroImage} 
-              alt="Hero Portrait" 
-              width={850}
-              height={850}
-              className="w-full h-auto max-h-[85vh] object-contain object-bottom grayscale block pointer-events-auto"
-            />
-          </div>
-        )}
-            
         {/* SCATTERED LOGOS - Global Background (z-10) */}
         {logos && logos.length > 0 && <ScatteredLogos logos={logos} />}
       </section>

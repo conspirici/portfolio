@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { TagPill } from '@/components/ui/TagPill';
 import { fetchContent } from '@/lib/content';
@@ -44,14 +45,26 @@ export default async function WorkPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
             {projects.map((project) => (
               <Link href={`/work/${project.slug}`} key={project.slug} className="group flex flex-col bg-white/5 backdrop-blur-sm p-6 border border-sage-white/10 hover:bg-white/10 transition-colors">
-                <div 
-                  className="mb-6 h-48 w-full transition-transform group-hover:-translate-y-1"
+                {/* The uploaded thumbnail when there is one; the project's
+                    gradient shows while it loads and stands in when there isn't. */}
+                <div
+                  className="relative mb-6 aspect-video w-full overflow-hidden transition-transform group-hover:-translate-y-1"
                   style={{
-                    background: project.gradient_from && project.gradient_to 
+                    background: project.gradient_from && project.gradient_to
                       ? `linear-gradient(to right, ${project.gradient_from}, ${project.gradient_to})`
                       : 'linear-gradient(to right, #4b5563, #1f2937)'
                   }}
-                />
+                >
+                  {project.thumbnail_url && (
+                    <Image
+                      src={project.thumbnail_url}
+                      alt={`Thumbnail for ${project.title}`}
+                      fill
+                      sizes="(max-width: 767px) 100vw, 480px"
+                      className="object-cover"
+                    />
+                  )}
+                </div>
                 <h2 className="font-display text-2xl text-sage-white mb-3 group-hover:text-white transition-colors">{project.title}</h2>
                 <p className="font-sans text-sage-white/70 mb-5 flex-grow">{project.summary}</p>
                 

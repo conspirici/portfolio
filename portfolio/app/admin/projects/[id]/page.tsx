@@ -63,6 +63,10 @@ export default function EditProject() {
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  // The thumbnail URL whose preview failed to load, if any. Keyed by URL so a
+  // newly uploaded or retyped one gets a fresh chance.
+  const [failedThumbnailUrl, setFailedThumbnailUrl] = useState<string | null>(null);
+  const thumbnailFailed = failedThumbnailUrl === thumbnailUrl;
 
   const [compiledMdx, setCompiledMdx] = useState<any>(null);
   const [mdxError, setMdxError] = useState<string | null>(null);
@@ -144,6 +148,8 @@ export default function EditProject() {
       alert("Upload failed");
     } finally {
       setUploading(false);
+      // Clear the picker so choosing the same file again still triggers an upload.
+      e.target.value = "";
     }
   };
 
@@ -368,6 +374,28 @@ export default function EditProject() {
                   <input type="file" className="hidden" accept="image/*" onChange={handleUpload} disabled={uploading} />
                 </label>
               </div>
+              {thumbnailUrl && (
+                <div className="mt-3">
+                  {thumbnailFailed ? (
+                    <div className="aspect-video w-full border border-red-500/30 bg-red-500/10 flex items-center justify-center p-4 text-center text-sm text-red-400">
+                      This image could not be loaded. Check the URL, or upload it again.
+                    </div>
+                  ) : (
+                    // Plain <img>: a preview of whatever URL is in the field, with no
+                    // optimizer in between, so a broken link is obvious straight away.
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={thumbnailUrl}
+                      alt="Thumbnail preview"
+                      onError={() => setFailedThumbnailUrl(thumbnailUrl)}
+                      className="aspect-video w-full object-cover border border-forest-800 bg-black"
+                    />
+                  )}
+                  <p className="mt-2 text-xs text-sage-white/50">
+                    Shown on the project card. Click Save Changes to keep it.
+                  </p>
+                </div>
+              )}
             </div>
             
             <div className="flex gap-4">
